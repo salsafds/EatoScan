@@ -1,3 +1,4 @@
+import 'signup_screen.dart';
 import 'package:flutter/material.dart';
 import 'login_screen.dart';
 import 'dashboard_screen.dart';
@@ -22,6 +23,7 @@ class MyApp extends StatelessWidget {
       initialRoute: '/login',
       routes: {
         '/login': (context) => const LoginScreen(),
+        '/signup': (context) => const SignupScreen(),
         // Tambahkan route lainnya di sini jika file-nya sudah dibuat
         // '/scan': (context) => ScanScreen(),
         // '/info': (context) => InformasiScreen(),
