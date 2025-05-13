@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:eatoscan/db_helper.dart';
-// import 'dashboard_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -10,69 +8,69 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final DBHelper dbHelper = DBHelper(); // Inisialisasi dbHelper
 
-  void _handleLogin() async {
-  String username = _usernameController.text;
-  // String password = _passwordController.text;
-  Navigator.pushReplacementNamed(context, '/dashboard', arguments: username);
-  // bool loginSuccess = await dbHelper.checkLogin(username, password);
-  
-  // if (loginSuccess) {
-  //   Navigator.pushReplacementNamed(context, '/dashboard', arguments: username);
-  // } else {
-  //   _showToast("Username atau Password salah!");
-  // }
-}
-
-
-  // void _showToast(String message) {
-  //   ScaffoldMessenger.of(context).showSnackBar(
-  //     SnackBar(content: Text(message)),
-  //   );
-  // }
+  void _handleLogin() {
+    // TODO: tambahkan logika login
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage("assets/images/loginbg.png"),
-            fit: BoxFit.cover,
+      backgroundColor: const Color.fromARGB(
+        255,
+        12,
+        84,
+        16,
+      ), // Warna hijau bagian atas
+      body: Column(
+        children: [
+          const SizedBox(height: 60),
+          const Text(
+            'Selamat Datang di',
+            style: TextStyle(fontSize: 20, color: Colors.white),
           ),
-        ),
-        padding: const EdgeInsets.all(30),
-        child: Center(
-          child: SingleChildScrollView(
-            child: Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
+          const Text(
+            'EatoScan',
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(24),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(32),
+                  topRight: Radius.circular(32),
+                ),
               ),
-              elevation: 20,
-              color: const Color(0xFFEFFBF1), // ganti sesuai warna putihhijaulogin
-              child: Padding(
-                padding: const EdgeInsets.all(24),
+              child: SingleChildScrollView(
                 child: Column(
                   children: [
+                    const SizedBox(height: 16),
+                    Image.asset('assets/images/eatoscan.jpg', height: 80),
+                    const SizedBox(height: 12),
                     const Text(
-                      'Masuk',
+                      'EAToSCAN',
                       style: TextStyle(
-                        fontSize: 36,
+                        fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF009688), // ganti sesuai color hijausehat
+                        color: Color(0xFFE65100), // Warna oranye
                       ),
                     ),
-                    const SizedBox(height: 40),
+                    const SizedBox(height: 32),
                     TextField(
-                      controller: _usernameController,
+                      controller: _emailController,
                       decoration: InputDecoration(
-                        hintText: 'Nama Pengguna',
-                        prefixIcon: const Icon(Icons.person),
-                        filled: true,
-                        fillColor: Colors.white,
+                        hintText: 'abcd@gmail.com',
+                        labelText: 'Email',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -83,68 +81,81 @@ class _LoginScreenState extends State<LoginScreen> {
                       controller: _passwordController,
                       obscureText: true,
                       decoration: InputDecoration(
-                        hintText: 'Kata Sandi',
-                        prefixIcon: const Icon(Icons.lock),
-                        filled: true,
-                        fillColor: Colors.white,
+                        hintText: 'Masukkan kata sandi',
+                        labelText: 'Kata Sandi',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
                     ),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pushReplacementNamed(context, '/lupaPassword');
-                      },
-                      child: const Text(
-                        'Lupa Password?',
-                        style: TextStyle(fontSize: 15, color: Color(0xFF009688)),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 24),
                     SizedBox(
                       width: double.infinity,
-                      height: 60,
+                      height: 50,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF009688),
+                          backgroundColor: const Color(0xFFE65100), // Oranye
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(22),
+                            borderRadius: BorderRadius.circular(10),
                           ),
                         ),
                         onPressed: _handleLogin,
                         child: const Text(
-                          'MASUK',
-                          style: TextStyle(fontSize: 18),
+                          'Masuk',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextButton(
+                      onPressed: () {
+                        // TODO: Lupa password
+                      },
+                      child: const Text(
+                        'Lupa kata sandi?',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.blueAccent,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    TextButton(
+                      onPressed: () {
+                        // TODO: Login admin
+                      },
+                      child: const Text(
+                        'Login sebagai Admin',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue,
+                        ),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        // TODO: Pindah ke halaman daftar
+                      },
+                      child: const Text.rich(
+                        TextSpan(
+                          text: 'Belum punya akun? ',
+                          style: TextStyle(fontSize: 14, color: Colors.black87),
+                          children: [
+                            TextSpan(
+                              text: 'Daftar Sekarang!',
+                              style: TextStyle(
+                                color: Colors.blue,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
                   ],
                 ),
               ),
-            ),
-          ),
-        ),
-      ),
-      bottomNavigationBar: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextButton(
-            onPressed: () {
-              Navigator.pushReplacementNamed(context, '/signup');
-            },
-            child: const Text(
-              'Belum punya akun? Daftar sekarang!',
-              style: TextStyle(fontSize: 15, color: Color(0xFF009688)),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pushReplacementNamed(context, '/loginAdmin');
-            },
-            child: const Text(
-              'Masuk sebagai admin.',
-              style: TextStyle(fontSize: 15, color: Color(0xFF009688)),
             ),
           ),
         ],
