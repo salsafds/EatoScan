@@ -1,3 +1,4 @@
+import 'package:eatoscan/dashboard_admin.dart';
 import 'package:eatoscan/produk_model.dart';
 import 'package:eatoscan/user_model.dart';
 import 'package:hive_flutter/adapters.dart';
@@ -7,7 +8,6 @@ import 'login_admin.dart';
 import 'package:flutter/material.dart';
 import 'login_screen.dart';
 import 'dashboard_screen.dart';
-import 'landing_page.dart';
 // import halaman lain jika sudah ada: scan_screen.dart, informasi_screen.dart, rekomendasi_screen.dart, profil_screen.dart
 
 void main() async {
@@ -37,8 +37,6 @@ class MyApp extends StatelessWidget {
         '/login': (context) => const LoginScreen(),
         '/loginAdmin': (context) => const LoginAdmin(),
         '/signup': (context) => const SignupScreen(),
-        '/landingPage': (context) => LandingPage(),
-
         // '/scan': (context) => ScanScreen(),
         // '/info': (context) => InformasiScreen(),
         // '/rekom': (context) => RekomendasiScreen(),

@@ -31,6 +31,8 @@ dependencies:
   hive: ^2.2.3
   hive_flutter: ^1.1.0
   path_provider: ^2.0.11 
+  google_fonts: ^6.1.0
+  iconsax: ^0.0.8 
   flutter:
     sdk: flutter
 
