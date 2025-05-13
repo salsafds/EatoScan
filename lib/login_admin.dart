@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:eatoscan/db_helper.dart';
 // import 'dashboard_screen.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class LoginAdmin extends StatefulWidget {
+  const LoginAdmin({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<LoginAdmin> createState() => _LoginAdminState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginAdminState extends State<LoginAdmin> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final DBHelper dbHelper = DBHelper(); // Inisialisasi dbHelper
@@ -58,7 +58,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Column(
                   children: [
                     const Text(
-                      'Masuk',
+                      'Masuk Admin',
                       style: TextStyle(
                         fontSize: 36,
                         fontWeight: FontWeight.bold,
@@ -131,19 +131,10 @@ class _LoginScreenState extends State<LoginScreen> {
         children: [
           TextButton(
             onPressed: () {
-              Navigator.pushReplacementNamed(context, '/signup');
+              Navigator.pushReplacementNamed(context, '/login');
             },
             child: const Text(
-              'Belum punya akun? Daftar sekarang!',
-              style: TextStyle(fontSize: 15, color: Color(0xFF009688)),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pushReplacementNamed(context, '/loginAdmin');
-            },
-            child: const Text(
-              'Masuk sebagai admin.',
+              'Masuk sebagai user.',
               style: TextStyle(fontSize: 15, color: Color(0xFF009688)),
             ),
           ),
