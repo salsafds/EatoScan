@@ -1,6 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+void main() {
+  runApp(
+    const Directionality(
+      textDirection: TextDirection.ltr,
+      child: DashboardAdmin(),
+    ),
+  );
+}
+
 class DashboardAdmin extends StatelessWidget {
   const DashboardAdmin({super.key});
 
@@ -15,7 +24,7 @@ class DashboardAdmin extends StatelessWidget {
             padding: const EdgeInsets.all(20),
             width: double.infinity,
             decoration: const BoxDecoration(
-              color: Color(0xFFE25420), // oranye utama
+              color: Color(0xFFE85D04), // oranye utama
               borderRadius: BorderRadius.only(
                 bottomLeft: Radius.circular(30),
                 bottomRight: Radius.circular(30),
@@ -50,7 +59,7 @@ class DashboardAdmin extends StatelessWidget {
                       ),
                     ],
                   ),
-                )
+                ),
               ],
             ),
           ),
@@ -66,19 +75,19 @@ class DashboardAdmin extends StatelessWidget {
                 _buildMenuButton(
                   icon: Icons.dashboard_customize_outlined,
                   label: 'PRODUK',
-                  color: const Color(0xFF2F6F4E),
+                  color: const Color(0xFF225840),
                   onTap: () {},
                 ),
                 _buildMenuButton(
                   icon: Icons.health_and_safety_outlined,
                   label: 'KESEHATAN',
-                  color: const Color(0xFF2F6F4E),
+                  color: const Color(0xFF225840),
                   onTap: () {},
                 ),
                 _buildMenuButton(
                   icon: Icons.analytics_outlined,
                   label: 'LAINNYA',
-                  color: const Color(0xFF2F6F4E),
+                  color: const Color(0xFF225840),
                   onTap: () {},
                 ),
               ],
@@ -87,7 +96,7 @@ class DashboardAdmin extends StatelessWidget {
 
           const SizedBox(height: 20),
 
-          // Chart/Card Placeholder
+          // Card/Grafik Placeholder
           Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -102,7 +111,7 @@ class DashboardAdmin extends StatelessWidget {
                       spreadRadius: 2,
                       blurRadius: 10,
                       offset: const Offset(0, 3),
-                    )
+                    ),
                   ],
                 ),
                 child: const Center(
@@ -156,7 +165,7 @@ class DashboardAdmin extends StatelessWidget {
                 fontWeight: FontWeight.w600,
                 color: color,
               ),
-            )
+            ),
           ],
         ),
       ),
