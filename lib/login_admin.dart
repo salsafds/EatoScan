@@ -8,14 +8,40 @@ class LoginAdmin extends StatefulWidget {
 }
 
 class _LoginAdminState extends State<LoginAdmin> {
-  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
   void _handleLogin() {
+    final username = _usernameController.text.trim();
+    final password = _passwordController.text;
+
+    if (username.isEmpty || password.isEmpty) {
+      _showMessage('Semua kolom harus diisi!');
+      return;
+    }
+
+    if (password.length < 8) {
+      _showMessage('Password harus minimal 8 karakter!');
+      return;
+    }
+
+    // if (!RegExp(r"^[\w\.-]+@[\w\.-]+\.\w{2,4}$").hasMatch(email)) {
+    //   _showMessage('Format email tidak valid!');
+    //   return;
+    // }
+
     // TODO: Add login logic
-    String username = _emailController.text;
     // String password = _passwordController.text;
-    Navigator.pushReplacementNamed(context, '/dashboard', arguments: username);
+    Navigator.pushReplacementNamed(context, '/dashboard');
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        // backgroundColor: Colors.red,
+      ),
+    );
   }
 
   @override
@@ -86,19 +112,21 @@ class _LoginAdminState extends State<LoginAdmin> {
       child: SingleChildScrollView(
         child: Column(
           children: [
-            const SizedBox(height: 16),
-            Image.asset('assets/images/eatoscan.jpg', height: 80),
+            const SizedBox(height: 10),
+            Image.asset('assets/images/eatoscan.jpg', height: 60),
             const SizedBox(height: 12),
-            const Text(
-              'EAToSCAN',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFFE65100),
-              ),
-            ),
+            // const SizedBox(height: 10),
+            Image.asset('assets/images/eatoscan1.jpg', height: 25),
+            // const Text(
+            //   'EAToSCAN',
+            //   style: TextStyle(
+            //     fontSize: 20,
+            //     fontWeight: FontWeight.bold,
+            //     color: Color(0xFFE65100),
+            //   ),
+            // ),
             const SizedBox(height: 32),
-            _buildTextField(_emailController, 'abcd@gmail.com', 'Email'),
+            _buildTextField(_usernameController, 'Masukkan nama admin', 'Nama'),
             const SizedBox(height: 20),
             _buildTextField(_passwordController, 'Masukkan kata sandi', 'Kata Sandi', obscureText: true),
             const SizedBox(height: 24),
