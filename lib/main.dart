@@ -7,8 +7,9 @@ import 'login_admin.dart';
 import 'package:flutter/material.dart';
 import 'login_screen.dart';
 import 'dashboard_screen.dart';
+import 'landing_page.dart';
 // import halaman lain jika sudah ada: scan_screen.dart, informasi_screen.dart, rekomendasi_screen.dart, profil_screen.dart
- 
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
@@ -31,12 +32,13 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
         useMaterial3: true,
       ),
-      initialRoute: '/login',
+      initialRoute: '/landingPage',
       routes: {
         '/login': (context) => const LoginScreen(),
         '/loginAdmin': (context) => const LoginAdmin(),
         '/signup': (context) => const SignupScreen(),
-        // 
+        '/landingPage': (context) => LandingPage(),
+
         // '/scan': (context) => ScanScreen(),
         // '/info': (context) => InformasiScreen(),
         // '/rekom': (context) => RekomendasiScreen(),
