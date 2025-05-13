@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="abugelap">#374151</color>
+    <color name="black">#FF000000</color>
+    <color name="hijausehat">#2D6A4F</color>
+    <color name="kuningsegar">#FFBA08</color>
+    <color name="oranyeenergi">#E85D04</color>
+    <color name="putihhijaulogin">#F1F9F6</color>
+    <color name="putihnetral">#F9FAFB</color>
+    <color name="white">#FFFFFFFF</color>
+    <string name="Nama_Produk">Nama Produk</string>
+    <string name="_kode_produk">kode produk</string>
+    <string name="_nama_produk">nama produk</string>
+    <string name="_nutrisi">nutrisi</string>
+    <string name="app_name">AndroidSqlite</string>
+    <string name="bahan_tambahan">Bahan Tambahan</string>
+    <string name="bahan_tambahan_table">Bahan Tambahan</string>
+    <string name="baru">Baru</string>
+    <string name="hapus">Hapus</string>
+    <string name="kandungan_nutrisi">Kandungan Nutrisi</string>
+    <string name="kode">Kode</string>
+    <string name="kode_pelanggan">Kode Pelanggan</string>
+    <string name="kode_produk">kode produk</string>
+    <string name="kode_produk_table">Kode Produk</string>
+    <string name="masukkan_kode_pelanggan">Masukkan kode pelanggan</string>
+    <string name="masukkan_nama">Masukkan nama</string>
+    <string name="masukkan_nomor_telepon">Masukkan nomor telepon</string>
+    <string name="menu_dashboard">Menu Dashboard</string>
+    <string name="nama_pelanggan">Nama Pelanggan</string>
+    <string name="nama_penggalan">Nama Penggalan</string>
+    <string name="nama_produk">nama produk</string>
+    <string name="nama_produk_table">Nama Produk</string>
+    <string name="name">Name</string>
+    <string name="no_telp">No. Telp</string>
+    <string name="notelp">No. Telp</string>
+    <string name="nutrisi">nutrisi</string>
+    <string name="nutrisi_table">Nutrisi</string>
+    <string name="potensi_resiko">Potensi Resiko</string>
+    <string name="potensi_risiko">potensi risiko</string>
+    <string name="potensi_risiko_table">Potensi Risiko</string>
+    <string name="selamat_datang">Selamat Datang!</string>
+    <string name="simpan">Simpan</string>
+    <string name="tambahan">tambahan</string>
+    <string name="telp">Telp</string>
+    <string name="ubah">Ubah</string>
+    <style name="Base.Theme.AndroidSqlite" parent="Theme.Material3.DayNight.NoActionBar">
+        
+        
+    </style>
+    <style name="Theme.AndroidSqlite" parent="Base.Theme.AndroidSqlite"/>
+</resources>
