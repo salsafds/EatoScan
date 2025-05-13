@@ -1,104 +1,163 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-class AdminDashboard extends StatelessWidget {
-  final String username;
-
-  const AdminDashboard({super.key, required this.username});
+class DashboardAdmin extends StatelessWidget {
+  const DashboardAdmin({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.orange.shade50,
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            Container(
-              color: Colors.orange,
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text(
-                    'EatoScan',
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 24),
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    'Selamat Datang, Admin!',
-                    style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w500),
-                  ),
-                ],
+      backgroundColor: const Color(0xFFF5F5F5),
+      body: Column(
+        children: [
+          // Header
+          Container(
+            padding: const EdgeInsets.all(20),
+            width: double.infinity,
+            decoration: const BoxDecoration(
+              color: Color(0xFFE25420), // oranye utama
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(30),
+                bottomRight: Radius.circular(30),
               ),
             ),
-            const SizedBox(height: 20),
-
-            // Menu Buttons
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: const [
-                  MenuButton(icon: Icons.grid_view_rounded, label: "PRODUK"),
-                  MenuButton(icon: Icons.medical_services, label: "KESEHATAN"),
-                  MenuButton(icon: Icons.bar_chart, label: "LAPORAN"),
-                ],
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "EatoScan",
+                  style: GoogleFonts.poppins(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                RichText(
+                  text: TextSpan(
+                    text: 'Selamat Datang, ',
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      color: Colors.white,
+                    ),
+                    children: [
+                      TextSpan(
+                        text: 'Admin!',
+                        style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              ],
             ),
-            const Spacer(),
+          ),
 
-            // Logout Button
-            Center(
-              child: TextButton(
-                onPressed: () {
-                  Navigator.pushReplacementNamed(context, '/login');
-                },
-                child: const Text(
-                  'Keluar',
-                  style: TextStyle(color: Colors.red, fontSize: 16),
+          const SizedBox(height: 20),
+
+          // Menu Buttons
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildMenuButton(
+                  icon: Icons.dashboard_customize_outlined,
+                  label: 'PRODUK',
+                  color: const Color(0xFF2F6F4E),
+                  onTap: () {},
+                ),
+                _buildMenuButton(
+                  icon: Icons.health_and_safety_outlined,
+                  label: 'KESEHATAN',
+                  color: const Color(0xFF2F6F4E),
+                  onTap: () {},
+                ),
+                _buildMenuButton(
+                  icon: Icons.analytics_outlined,
+                  label: 'LAINNYA',
+                  color: const Color(0xFF2F6F4E),
+                  onTap: () {},
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          // Chart/Card Placeholder
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      spreadRadius: 2,
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
+                    )
+                  ],
+                ),
+                child: const Center(
+                  child: Text(
+                    'Area Grafik / Konten',
+                    style: TextStyle(color: Colors.grey),
+                  ),
                 ),
               ),
             ),
-            const SizedBox(height: 20),
-          ],
-        ),
+          ),
+
+          const SizedBox(height: 20),
+        ],
       ),
     );
   }
-}
 
-class MenuButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-
-  const MenuButton({super.key, required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
+  Widget _buildMenuButton({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 6),
-        child: ElevatedButton.icon(
-          onPressed: () {
-            // Tambahkan navigasi jika diperlukan
-          },
-          icon: Icon(icon, size: 20),
-          label: Text(label),
-          style: ElevatedButton.styleFrom(
-            foregroundColor: Colors.white,
-            backgroundColor: Colors.green.shade700,
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+        width: 90,
+        height: 90,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 8,
+              offset: const Offset(2, 4),
             ),
-          ),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: color, size: 28),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: color,
+              ),
+            )
+          ],
         ),
       ),
     );
