@@ -1,3 +1,4 @@
+import 'package:eatoscan/dashboard_admin.dart';
 import 'package:eatoscan/produk_model.dart';
 import 'package:eatoscan/user_model.dart';
 import 'package:hive_flutter/adapters.dart';
@@ -36,6 +37,7 @@ class MyApp extends StatelessWidget {
         '/login': (context) => const LoginScreen(),
         '/loginAdmin': (context) => const LoginAdmin(),
         '/signup': (context) => const SignupScreen(),
+        '/dashboardAdmin': (context) => const DashboardAdmin(),
         // 
         // '/scan': (context) => ScanScreen(),
         // '/info': (context) => InformasiScreen(),
