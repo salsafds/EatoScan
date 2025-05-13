@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:eatoscan/db_helper.dart';
+// import 'package:eatoscan/db_helper.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -8,14 +10,32 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final DBHelper dbHelper = DBHelper();
 
-  void _handleLogin() {
-    // TODO: Add login logic
-    String username = _emailController.text;
-    // String password = _passwordController.text;
-    Navigator.pushReplacementNamed(context, '/dashboard', arguments: username);
+  void _handleLogin() async {
+    final username = _usernameController.text.trim();
+    final password = _passwordController.text;
+
+    if (username.isEmpty || password.isEmpty) {
+      _showMessage('Semua kolom harus diisi!');
+      return;
+    }
+
+    if (password.length < 8) {
+      _showMessage('Password harus minimal 8 karakter!');
+      return;
+    }
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        // backgroundColor: Colors.red,
+      ),
+    );
   }
 
   @override
@@ -36,7 +56,6 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  // Method to build the welcome text
   Widget _buildWelcomeText() {
     return Column(
       children: [
@@ -71,7 +90,6 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  // Method to build the form for logging in
   Widget _buildLoginForm() {
     return Container(
       width: double.infinity,
@@ -86,19 +104,21 @@ class _LoginScreenState extends State<LoginScreen> {
       child: SingleChildScrollView(
         child: Column(
           children: [
-            const SizedBox(height: 16),
-            Image.asset('assets/images/eatoscan.jpg', height: 80),
+            const SizedBox(height: 10),
+            Image.asset('assets/images/eatoscan.jpg', height: 60),
             const SizedBox(height: 12),
-            const Text(
-              'EAToSCAN',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFFE65100),
-              ),
-            ),
+            // const SizedBox(height: 10),
+            Image.asset('assets/images/eatoscan1.jpg', height: 25),
+            // const Text(
+            //   'EAToSCAN',
+            //   style: TextStyle(
+            //     fontSize: 20,
+            //     fontWeight: FontWeight.bold,
+            //     color: Color(0xFFE65100),
+            //   ),
+            // ),
             const SizedBox(height: 32),
-            _buildTextField(_emailController, 'abcd@gmail.com', 'Email'),
+            _buildTextField(_usernameController, 'Masukkan Nama', 'Username'),
             const SizedBox(height: 20),
             _buildTextField(_passwordController, 'Masukkan kata sandi', 'Kata Sandi', obscureText: true),
             const SizedBox(height: 24),
@@ -111,7 +131,6 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  // Method to build a single text field
   Widget _buildTextField(TextEditingController controller, String hintText, String labelText, {bool obscureText = false}) {
     return TextField(
       controller: controller,
@@ -126,7 +145,6 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  // Method to build the login button
   Widget _buildLoginButton() {
     return SizedBox(
       width: double.infinity,
@@ -150,7 +168,6 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  // Method to build the 'forgot password' button
   Widget _buildForgotPasswordButton() {
     return TextButton(
       onPressed: () {
@@ -166,15 +183,14 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  // Method to build the bottom navigation bar
   Widget _buildBottomNavigationBar(BuildContext context) {
   return Container(
-    color: Colors.white, // Ensure this is white
+    color: Colors.white, 
     child: Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         SizedBox(
-          width: double.infinity, // Makes the button full width
+          width: double.infinity, 
           child: TextButton(
             onPressed: () {
               Navigator.pushReplacementNamed(context, '/signup');
@@ -186,7 +202,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
         SizedBox(
-          width: double.infinity, // Makes the button full width
+          width: double.infinity, 
           child: TextButton(
             onPressed: () {
               Navigator.pushReplacementNamed(context, '/loginAdmin');
