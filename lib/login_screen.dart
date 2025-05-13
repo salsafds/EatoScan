@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:eatoscan/db_helper.dart'; // pastikan import DBHelper
+import 'package:eatoscan/db_helper.dart';
 // import 'dashboard_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -16,23 +16,23 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _handleLogin() async {
   String username = _usernameController.text;
-  String password = _passwordController.text;
-
-  bool loginSuccess = await dbHelper.checkLogin(username, password);
+  // String password = _passwordController.text;
+  Navigator.pushReplacementNamed(context, '/dashboard', arguments: username);
+  // bool loginSuccess = await dbHelper.checkLogin(username, password);
   
-  if (loginSuccess) {
-    Navigator.pushReplacementNamed(context, '/dashboard', arguments: username);
-  } else {
-    _showToast("Username atau Password salah!");
-  }
+  // if (loginSuccess) {
+  //   Navigator.pushReplacementNamed(context, '/dashboard', arguments: username);
+  // } else {
+  //   _showToast("Username atau Password salah!");
+  // }
 }
 
 
-  void _showToast(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
-  }
+  // void _showToast(String message) {
+  //   ScaffoldMessenger.of(context).showSnackBar(
+  //     SnackBar(content: Text(message)),
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context) {

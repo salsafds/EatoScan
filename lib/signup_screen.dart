@@ -45,7 +45,7 @@ class _SignupScreenState extends State<SignupScreen> {
     }
 
     try {
-      await dbHelper.addUser(username: '', email: '', password: '');
+      await dbHelper.addUser(username: username, email: email, password: password);
       _showMessage('Data berhasil disimpan');
       if (!mounted) return;
       Navigator.pushReplacement(

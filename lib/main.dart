@@ -1,10 +1,20 @@
+import 'package:eatoscan/produk_model.dart';
+import 'package:eatoscan/user_model.dart';
+import 'package:hive_flutter/adapters.dart';
+
 import 'signup_screen.dart';
 import 'package:flutter/material.dart';
 import 'login_screen.dart';
 import 'dashboard_screen.dart';
 // import halaman lain jika sudah ada: scan_screen.dart, informasi_screen.dart, rekomendasi_screen.dart, profil_screen.dart
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Hive.initFlutter();
+  Hive.registerAdapter(UserModelAdapter());
+  Hive.registerAdapter(ProdukModelAdapter());
+  await Hive.openBox<UserModel>('users');
+  await Hive.openBox<ProdukModel>('produk');
   runApp(const MyApp());
 }
 
@@ -24,7 +34,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/login': (context) => const LoginScreen(),
         '/signup': (context) => const SignupScreen(),
-        // Tambahkan route lainnya di sini jika file-nya sudah dibuat
+        // 
         // '/scan': (context) => ScanScreen(),
         // '/info': (context) => InformasiScreen(),
         // '/rekom': (context) => RekomendasiScreen(),
