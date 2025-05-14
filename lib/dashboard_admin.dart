@@ -82,7 +82,7 @@ class DashboardAdmin extends StatelessWidget {
                       _buildMenuButton(
                         icon: Iconsax.box,
                         label: 'PRODUK',
-                        onTap: () {},
+                        onTap: () {Navigator.pushReplacementNamed(context, '/crudAdmin');}
                       ),
                       _buildMenuButton(
                         icon: Iconsax.heart,

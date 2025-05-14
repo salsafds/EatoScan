@@ -77,7 +77,7 @@ class _EditRiwayatKesehatanPageState extends State<EditRiwayatKesehatanPage> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Image.asset(
-                        'assets/eatoscan_logo.png',
+                        'assets/images/eatoscan.png',
                         height: 100,
                       ),
                       const SizedBox(height: 20),

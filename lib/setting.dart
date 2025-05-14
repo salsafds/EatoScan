@@ -85,10 +85,12 @@ class _SettingPageState extends State<SettingPage> {
                     ),
                     padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
                   ),
-                  onPressed: () {
+                  onPressed: () async {
                     Navigator.of(context).pop(); // tutup dialog
                     // Tambahkan logika logout di sini
-                    Navigator.of(context).pushReplacementNamed('/login');
+                    SharedPreferences prefs = await SharedPreferences.getInstance();
+                    await prefs.clear(); // bersihkan data login
+                    Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false,);
                   },
                   child: Text(
                     'Ya',

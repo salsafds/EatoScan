@@ -26,7 +26,28 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(child: Image.asset('../assets/images/eatoscan.png')),
+      body: SafeArea(
+        child: Center( // Ini membuat logo di tengah layar (secara vertikal & horizontal)
+          child: _buildSplashLogo(context),
+        ),
+      ),
+      bottomNavigationBar: _buildBottomNavigationBar(context),
+    );
+  }
+
+  Widget _buildSplashLogo(BuildContext context) {
+    return Image.asset('assets/images/eatoscan.png', height: 150);
+  }
+
+  Widget _buildBottomNavigationBar(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16), // Jarak dari bawah layar
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Image.asset('assets/images/eatoscan1.png', height: 25),
+        ],
+      ),
     );
   }
 }
