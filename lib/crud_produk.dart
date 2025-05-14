@@ -1,20 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:eatoscan/db_helper.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const CrudProduk());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class CrudProduk extends StatelessWidget {
+  const CrudProduk({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'EatoScan',
-      theme: ThemeData(
-        primarySwatch: Colors.orange,
-        fontFamily: 'Arial',
-      ),
+      theme: ThemeData(primarySwatch: Colors.orange, fontFamily: 'Arial'),
       home: const ProductFormPage(),
       debugShowCheckedModeBanner: false,
     );
@@ -72,7 +70,7 @@ class ProductFormPage extends StatelessWidget {
                             SizedBox(height: 24),
                             FormFieldWithLabel(label: 'Nama Produk'),
                             FormFieldWithLabel(label: 'Kode Produk'),
-                            NutritionInputList(), 
+                            NutritionInputList(),
                             RiskInputList(),
                             CategoryDropdown(),
                             SizedBox(height: 24),
@@ -109,10 +107,7 @@ class FormFieldWithLabel extends StatelessWidget {
             width: 120,
             child: Padding(
               padding: const EdgeInsets.only(top: 12),
-              child: Text(
-                label,
-                style: TextStyle(fontSize: 15),
-              ),
+              child: Text(label, style: TextStyle(fontSize: 15)),
             ),
           ),
           Expanded(
@@ -125,7 +120,10 @@ class FormFieldWithLabel extends StatelessWidget {
                   borderRadius: BorderRadius.circular(15),
                 ),
                 isDense: true,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 14,
+                ),
               ),
             ),
           ),
@@ -134,7 +132,6 @@ class FormFieldWithLabel extends StatelessWidget {
     );
   }
 }
-
 
 class NutritionInputRow extends StatelessWidget {
   final TextEditingController nameController;
@@ -163,15 +160,16 @@ class NutritionInputRow extends StatelessWidget {
         children: [
           SizedBox(
             width: 120,
-            child: showLabel
-                ? const Padding(
-                    padding: EdgeInsets.only(top: 12),
-                    child: Text(
-                      'Kandungan\nNutrisi',
-                      style: TextStyle(fontSize: 14),
-                    ),
-                  )
-                : const SizedBox.shrink(),
+            child:
+                showLabel
+                    ? const Padding(
+                      padding: EdgeInsets.only(top: 12),
+                      child: Text(
+                        'Kandungan\nNutrisi',
+                        style: TextStyle(fontSize: 14),
+                      ),
+                    )
+                    : const SizedBox.shrink(),
           ),
           Expanded(
             child: Row(
@@ -188,7 +186,10 @@ class NutritionInputRow extends StatelessWidget {
                         borderRadius: BorderRadius.circular(15),
                       ),
                       isDense: true,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 14,
+                      ),
                     ),
                   ),
                 ),
@@ -205,7 +206,10 @@ class NutritionInputRow extends StatelessWidget {
                         borderRadius: BorderRadius.circular(15),
                       ),
                       isDense: true,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 14,
+                      ),
                     ),
                   ),
                 ),
@@ -223,7 +227,6 @@ class NutritionInputRow extends StatelessWidget {
   }
 }
 
-
 class NutritionInputList extends StatefulWidget {
   const NutritionInputList({super.key});
 
@@ -232,8 +235,12 @@ class NutritionInputList extends StatefulWidget {
 }
 
 class _NutritionInputListState extends State<NutritionInputList> {
-  final List<TextEditingController> _nameControllers = [TextEditingController()];
-  final List<TextEditingController> _amountControllers = [TextEditingController()];
+  final List<TextEditingController> _nameControllers = [
+    TextEditingController(),
+  ];
+  final List<TextEditingController> _amountControllers = [
+    TextEditingController(),
+  ];
 
   void _addField() {
     setState(() {
@@ -279,7 +286,6 @@ class _NutritionInputListState extends State<NutritionInputList> {
   }
 }
 
-
 class RiskInputRow extends StatelessWidget {
   final TextEditingController controller;
   final VoidCallback onAdd;
@@ -307,12 +313,13 @@ class RiskInputRow extends StatelessWidget {
             width: 120,
             child: Padding(
               padding: const EdgeInsets.only(top: 14),
-              child: showLabel
-                  ? const Text(
-                      'Potensi Risiko',
-                      style: TextStyle(fontSize: 15),
-                    )
-                  : const SizedBox.shrink(), // sembunyikan label
+              child:
+                  showLabel
+                      ? const Text(
+                        'Potensi Risiko',
+                        style: TextStyle(fontSize: 15),
+                      )
+                      : const SizedBox.shrink(), // sembunyikan label
             ),
           ),
           Expanded(
@@ -329,7 +336,10 @@ class RiskInputRow extends StatelessWidget {
                         borderRadius: BorderRadius.circular(15),
                       ),
                       isDense: true,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 14,
+                      ),
                     ),
                   ),
                 ),
@@ -346,7 +356,6 @@ class RiskInputRow extends StatelessWidget {
     );
   }
 }
-
 
 class RiskInputList extends StatefulWidget {
   const RiskInputList({super.key});
@@ -379,21 +388,20 @@ class _RiskInputListState extends State<RiskInputList> {
   }
 
   @override
-Widget build(BuildContext context) {
-  return Column(
-    children: List.generate(_controllers.length, (index) {
-      return RiskInputRow(
-        controller: _controllers[index],
-        isLast: index == _controllers.length - 1,
-        onAdd: _addField,
-        onRemove: () => _removeField(index),
-        showLabel: index == 0, // hanya baris pertama
-      );
-    }),
-  );
+  Widget build(BuildContext context) {
+    return Column(
+      children: List.generate(_controllers.length, (index) {
+        return RiskInputRow(
+          controller: _controllers[index],
+          isLast: index == _controllers.length - 1,
+          onAdd: _addField,
+          onRemove: () => _removeField(index),
+          showLabel: index == 0, // hanya baris pertama
+        );
+      }),
+    );
+  }
 }
-}
-
 
 class CategoryDropdown extends StatelessWidget {
   const CategoryDropdown({super.key});
@@ -407,10 +415,7 @@ class CategoryDropdown extends StatelessWidget {
           width: 120,
           child: Padding(
             padding: EdgeInsets.only(top: 14),
-            child: Text(
-              'Kategori Produk',
-              style: TextStyle(fontSize: 15),
-              ),
+            child: Text('Kategori Produk', style: TextStyle(fontSize: 15)),
           ),
         ),
         Expanded(
@@ -423,7 +428,10 @@ class CategoryDropdown extends StatelessWidget {
                 borderRadius: BorderRadius.circular(15),
               ),
               isDense: true,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 14,
+              ),
             ),
             items: const [
               DropdownMenuItem(value: 'roti', child: Text('Roti')),
@@ -491,4 +499,3 @@ class ActionButtons extends StatelessWidget {
     );
   }
 }
-
