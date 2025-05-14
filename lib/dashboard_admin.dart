@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:iconsax/iconsax.dart';
 
 class DashboardAdmin extends StatelessWidget {
   const DashboardAdmin({super.key});
@@ -7,116 +8,119 @@ class DashboardAdmin extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
-      body: Column(
+      backgroundColor: const Color(0xFFE85D04),
+      body: Stack(
         children: [
-          // Header
-          Container(
-            padding: const EdgeInsets.all(20),
-            width: double.infinity,
-            decoration: const BoxDecoration(
-              color: Color(0xFFE25420), // oranye utama
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(30),
-                bottomRight: Radius.circular(30),
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "EatoScan",
-                  style: GoogleFonts.poppins(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                  ),
+          Column(
+            children: [
+              // Header Oranye
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.only(
+                  top: 40,
+                  left: 20,
+                  right: 20,
+                  bottom: 20,
                 ),
-                const SizedBox(height: 4),
-                RichText(
-                  text: TextSpan(
-                    text: 'Selamat Datang, ',
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      color: Colors.white,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "EatoScan",
+                      style: GoogleFonts.poppins(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                     ),
-                    children: [
-                      TextSpan(
-                        text: 'Admin!',
+                    const SizedBox(height: 4),
+                    RichText(
+                      text: TextSpan(
+                        text: 'Selamat Datang, ',
                         style: GoogleFonts.poppins(
-                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
                           color: Colors.white,
                         ),
+                        children: [
+                          TextSpan(
+                            text: 'Admin!',
+                            style: GoogleFonts.poppins(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+
+          // Bagian Putih dengan rounded top
+          Positioned(
+            top: 120,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(36),
+                  topRight: Radius.circular(36),
+                ),
+              ),
+              padding: const EdgeInsets.fromLTRB(20, 32, 20, 0),
+              child: Column(
+                children: [
+                  // Tombol menu
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildMenuButton(
+                        icon: Iconsax.box,
+                        label: 'PRODUK',
+                        onTap: () {},
+                      ),
+                      _buildMenuButton(
+                        icon: Iconsax.heart,
+                        label: 'KESEHATAN',
+                        onTap: () {},
+                      ),
+                      _buildMenuButton(
+                        icon: Iconsax.element_4,
+                        label: 'LAINNYA',
+                        onTap: () {},
                       ),
                     ],
                   ),
-                )
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
-          // Menu Buttons
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _buildMenuButton(
-                  icon: Icons.dashboard_customize_outlined,
-                  label: 'PRODUK',
-                  color: const Color(0xFF2F6F4E),
-                  onTap: () {},
-                ),
-                _buildMenuButton(
-                  icon: Icons.health_and_safety_outlined,
-                  label: 'KESEHATAN',
-                  color: const Color(0xFF2F6F4E),
-                  onTap: () {},
-                ),
-                _buildMenuButton(
-                  icon: Icons.analytics_outlined,
-                  label: 'LAINNYA',
-                  color: const Color(0xFF2F6F4E),
-                  onTap: () {},
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
-          // Chart/Card Placeholder
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(24),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      spreadRadius: 2,
-                      blurRadius: 10,
-                      offset: const Offset(0, 3),
-                    )
-                  ],
-                ),
-                child: const Center(
-                  child: Text(
-                    'Area Grafik / Konten',
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                ),
+                ],
               ),
             ),
           ),
-
-          const SizedBox(height: 20),
         ],
+      ),
+
+      // 🔻 Bottom Navigation Bar untuk Tombol Keluar
+      bottomNavigationBar: Container(
+        color: Colors.white,
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: TextButton(
+          onPressed: () {
+            _showLogoutDialog(context);
+          },
+
+          child: Text(
+            'Keluar',
+            style: GoogleFonts.poppins(
+              color: const Color(0xFFE85D04),
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -124,7 +128,6 @@ class DashboardAdmin extends StatelessWidget {
   Widget _buildMenuButton({
     required IconData icon,
     required String label,
-    required Color color,
     required VoidCallback onTap,
   }) {
     return GestureDetector(
@@ -133,8 +136,8 @@ class DashboardAdmin extends StatelessWidget {
         width: 90,
         height: 90,
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
+          color: const Color(0xFF225840),
+          borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.08),
@@ -146,20 +149,102 @@ class DashboardAdmin extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: color, size: 28),
+            Icon(icon, color: Colors.white, size: 28),
             const SizedBox(height: 8),
             Text(
               label,
-              textAlign: TextAlign.center,
               style: GoogleFonts.poppins(
                 fontSize: 12,
+                color: Colors.white,
                 fontWeight: FontWeight.w600,
-                color: color,
               ),
-            )
+            ),
           ],
         ),
       ),
+    );
+  }
+
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Apakah Anda yakin ingin\nkeluar dari akun ini?',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context); // Tutup dialog
+                        Navigator.pushReplacementNamed(
+                          context,
+                          '/loginAdmin',
+                        ); // Arahkan ke halaman login
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        'Ya',
+                        style: GoogleFonts.poppins(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context); // Tutup dialog
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.black54,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        'Tidak',
+                        style: GoogleFonts.poppins(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
