@@ -80,93 +80,6 @@ class _LihatProdukPageState extends State<LihatProdukPage> {
                 ],
               ),
             ),
-<<<<<<< HEAD
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'Data Produk',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ElevatedButton(
-                onPressed:
-                    selectedIndex != null
-                        ? () async {
-                          final produk = produkBox.getAt(selectedIndex!);
-                          final result = await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder:
-                                  (_) => EditProdukPage(
-                                    index: selectedIndex!,
-                                    produk: produk!,
-                                  ),
-                            ),
-                          );
-                          if (result == true) {
-                            setState(() {}); // refresh jika kembali dari edit
-                          }
-                        }
-                        : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF225840),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 32,
-                    vertical: 12,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: const Text(
-                  'Ubah',
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-              const SizedBox(width: 16),
-              ElevatedButton(
-                onPressed:
-                    selectedIndex != null
-                        ? () => hapusProduk(selectedIndex!)
-                        : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF225840),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 32,
-                    vertical: 12,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: const Text(
-                  'Hapus',
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          // TABEL
-          Expanded(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: SizedBox(
-                width: 800,
-                child: ListView.builder(
-                  itemCount: produkList.length + 1,
-                  itemBuilder: (context, index) {
-                    if (index == 0) {
-                      // HEADER
-                      return Container(
-                        color: const Color(0xFFDDDDDD),
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 10,
-                          horizontal: 8,
-=======
             Expanded(
               child: Container(
                 decoration: const BoxDecoration(
@@ -247,7 +160,6 @@ class _LihatProdukPageState extends State<LihatProdukPage> {
                               }
                             },
                           ),
->>>>>>> 3ce8dafb9292098c83d8f951b27e3e4367285521
                         ),
                       ),
                     ),
