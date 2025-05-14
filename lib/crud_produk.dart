@@ -1,3 +1,4 @@
+import 'package:eatoscan/dashboard_admin.dart';
 import 'package:flutter/material.dart';
 import 'package:eatoscan/db_helper.dart';
 import 'package:eatoscan/lihat_produk.dart';
@@ -108,16 +109,33 @@ class _ProductFormPageState extends State<ProductFormPage> {
         child: Column(
           children: [
             Container(
-              padding: const EdgeInsets.symmetric(vertical: 50),
-              child: const Center(
-                child: Text(
-                  'EatoScan',
-                  style: TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 50, horizontal: 16),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: IconButton(
+                      onPressed: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (context) => DashboardAdmin()),
+                        );
+                      },
+                      icon: const Icon(Icons.arrow_back, color: Colors.white),
+                    ),
                   ),
-                ),
+                  const Center(
+                    child: Text(
+                      'EatoScan',
+                      style: TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
             Expanded(
