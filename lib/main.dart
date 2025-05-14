@@ -1,5 +1,6 @@
 import 'package:eatoscan/home_page.dart';
 import 'package:eatoscan/produk_model.dart';
+import 'package:eatoscan/setting.dart';
 import 'package:eatoscan/splash.dart';
 import 'package:eatoscan/user_model.dart';
 import 'package:hive_flutter/adapters.dart';
@@ -42,11 +43,11 @@ class MyApp extends StatelessWidget {
         '/signup': (context) => const SignupScreen(),
         '/landingPage': (context) => LandingPage(),
         '/crudAdmin': (context) => const CrudProduk(),
-
+        '/setting': (context) => SettingPage(),
         // '/scan': (context) => ScanScreen(),
         // '/info': (context) => InformasiScreen(),
         // '/rekom': (context) => RekomendasiScreen(),
-        // '/profil': (context) => ProfilScreen(),
+        
       },
       // Gunakan onGenerateRoute untuk meng-handle route yang butuh arguments
       onGenerateRoute: (settings) {

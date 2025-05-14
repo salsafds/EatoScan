@@ -57,7 +57,12 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ],
                   ),
-                  const Icon(Icons.settings, color: Colors.white),
+                  IconButton(
+                    icon: const Icon(Icons.settings, color: Colors.white),
+                    onPressed: () {
+                      Navigator.pushReplacementNamed(context, '/setting');
+                    },
+                  ),
                 ],
               ),
             ),
@@ -129,7 +134,7 @@ class _HomePageState extends State<HomePage> {
                             Image.asset(
                               produk.gambarPath?.isNotEmpty == true
                                   ? produk.gambarPath!
-                                  : "assets/images/eatoscan.jpg",
+                                  : "assets/images/eatoscan.png",
                               width: 60,
                               height: 60,
                             ),

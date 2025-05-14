@@ -67,11 +67,16 @@ class _LandingPageState extends State<LandingPage> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     alignment: Alignment.center,
-                    child: const Text(
+                    child: TextButton(
+                      onPressed: () {
+                        Navigator.pushReplacementNamed(context, '/login');
+                      },
+                      child: const Text(
                       "Masuk", // Bisa ganti dengan Icon atau Text lain
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.bold,
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
@@ -144,7 +149,7 @@ class _LandingPageState extends State<LandingPage> {
                               children: [
                                 // Gambar placeholder (jika tidak ada gambar)
                                 Image.asset(
-                                  "assets/images/eatoscan.jpg", // default image
+                                  "assets/images/eatoscan.png", // default image
                                   width: 60,
                                   height: 60,
                                 ),
