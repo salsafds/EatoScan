@@ -52,6 +52,75 @@ class _SettingPageState extends State<SettingPage> {
     _loadProfileData(); // refresh data
   }
 
+  void _showLogoutDialog() {
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        contentPadding: EdgeInsets.fromLTRB(24, 24, 24, 16),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Apakah Anda yakin ingin keluar dari akun ini?',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: Colors.black,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                // Tombol Ya
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                  ),
+                  onPressed: () {
+                    Navigator.of(context).pop(); // tutup dialog
+                    // Tambahkan logika logout di sini
+                    Navigator.of(context).pushReplacementNamed('/login');
+                  },
+                  child: Text(
+                    'Ya',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+                // Tombol Tidak
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.grey[800],
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  ),
+                  onPressed: () {
+                    Navigator.of(context).pop(); // tutup dialog
+                  },
+                  child: Text(
+                    'Tidak',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ],
+            )
+          ],
+        ),
+      );
+    },
+  );
+}
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -112,10 +181,7 @@ class _SettingPageState extends State<SettingPage> {
                     MaterialPageRoute(builder: (context) => const EditRiwayatKesehatanPage()),
                   );
                 }),
-
-                _buildMenuItem(Icons.logout, 'Keluar', () {
-                  // Logika logout
-                }),
+                _buildMenuItem(Icons.logout, 'Keluar', _showLogoutDialog),
               ],
             ),
           ),
