@@ -27,6 +27,8 @@ class _LoginScreenState extends State<LoginScreen> {
       _showMessage('Password harus minimal 8 karakter!');
       return;
     }
+
+    Navigator.pushReplacementNamed(context, '/homepage', arguments: username);
   }
 
   void _showMessage(String message) {
@@ -105,10 +107,10 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Column(
           children: [
             const SizedBox(height: 10),
-            Image.asset('assets/images/eatoscan.jpg', height: 60),
+            Image.asset('assets/images/eatoscan.png', height: 60),
             const SizedBox(height: 12),
             // const SizedBox(height: 10),
-            Image.asset('assets/images/eatoscan1.jpg', height: 25),
+            Image.asset('assets/images/eatoscan1.png', height: 18),
             // const Text(
             //   'EAToSCAN',
             //   style: TextStyle(

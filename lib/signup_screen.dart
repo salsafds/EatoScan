@@ -128,10 +128,10 @@ class _SignupScreenState extends State<SignupScreen> {
         child: Column(
           children: [
             const SizedBox(height: 10),
-            Image.asset('assets/images/eatoscan.jpg', height: 60),
+            Image.asset('assets/images/eatoscan.png', height: 60),
             const SizedBox(height: 12),
             // const SizedBox(height: 10),
-            Image.asset('assets/images/eatoscan1.jpg', height: 25),
+            Image.asset('assets/images/eatoscan1.png', height: 18),
             // const SizedBox(height: 10),
             // const Text(
             //   'EAToSCAN',
