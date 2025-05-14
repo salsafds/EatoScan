@@ -1,4 +1,6 @@
+import 'package:eatoscan/home_page.dart';
 import 'package:eatoscan/produk_model.dart';
+import 'package:eatoscan/splash.dart';
 import 'package:eatoscan/user_model.dart';
 import 'package:hive_flutter/adapters.dart';
 
@@ -6,7 +8,6 @@ import 'signup_screen.dart';
 import 'login_admin.dart';
 import 'package:flutter/material.dart';
 import 'login_screen.dart';
-import 'dashboard_screen.dart';
 import 'landing_page.dart';
 import 'crud_produk.dart';
 // import halaman lain jika sudah ada: scan_screen.dart, informasi_screen.dart, rekomendasi_screen.dart, profil_screen.dart
@@ -33,8 +34,9 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
         useMaterial3: true,
       ),
-      initialRoute: '/crudAdmin',
+      initialRoute: '/splash',
       routes: {
+        '/splash': (context) => const SplashScreen(),
         '/login': (context) => const LoginScreen(),
         '/loginAdmin': (context) => const LoginAdmin(),
         '/signup': (context) => const SignupScreen(),
@@ -48,10 +50,10 @@ class MyApp extends StatelessWidget {
       },
       // Gunakan onGenerateRoute untuk meng-handle route yang butuh arguments
       onGenerateRoute: (settings) {
-        if (settings.name == '/dashboard') {
+        if (settings.name == '/homepage') {
           final username = settings.arguments as String;
           return MaterialPageRoute(
-            builder: (context) => DashboardScreen(username: username),
+            builder: (context) => HomePage(username: username),
           );
         }
         return null;

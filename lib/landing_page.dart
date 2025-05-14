@@ -57,7 +57,24 @@ class _LandingPageState extends State<LandingPage> {
                       ),
                     ],
                   ),
-                  const Icon(Icons.settings, color: Colors.white),
+
+                  // Gantinya Icon(Icons.settings)
+                  Container(
+                    width: 95,
+                    height: 42,
+                    decoration: BoxDecoration(
+                      color: Colors.white, // Bisa diganti sesuai tema
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    alignment: Alignment.center,
+                    child: const Text(
+                      "Masuk", // Bisa ganti dengan Icon atau Text lain
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),

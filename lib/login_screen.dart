@@ -27,6 +27,8 @@ class _LoginScreenState extends State<LoginScreen> {
       _showMessage('Password harus minimal 8 karakter!');
       return;
     }
+
+    Navigator.pushReplacementNamed(context, '/homepage', arguments: username);
   }
 
   void _showMessage(String message) {

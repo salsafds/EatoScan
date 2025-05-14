@@ -26,4 +26,8 @@ class ProdukModel extends HiveObject {
     required this.tambahan,
     required this.risiko,
   });
+
+  get gambarPath => null;
+
+  get kategori => null;
 }
