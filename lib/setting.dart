@@ -122,7 +122,7 @@ class _SettingPageState extends State<SettingPage> {
           Padding(
             padding: const EdgeInsets.only(bottom: 16),
             child: Image.asset(
-              'assets/images/eatoscan1.jpg',
+              'assets/images/eatoscan1.png',
               height: 40,
             ),
           ),
