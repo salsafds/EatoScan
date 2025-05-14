@@ -50,38 +50,39 @@ class ProductFormPage extends StatelessWidget {
               child: Container(
                 decoration: const BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(40)),
                 ),
                 padding: const EdgeInsets.all(24),
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Center(
-                        child: Text(
-                          'Data Produk',
-                          style: TextStyle(
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                          ),
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: const [
+                            Center(
+                              child: Text(
+                                'Data Produk',
+                                style: TextStyle(
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: 24),
+                            FormFieldWithLabel(label: 'Nama Produk'),
+                            FormFieldWithLabel(label: 'Kode Produk'),
+                            NutritionInputList(), 
+                            RiskInputList(),
+                            CategoryDropdown(),
+                            SizedBox(height: 24),
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 24),
-                      const FormFieldWithLabel(label: 'Nama Produk'),
-                      const FormFieldWithLabel(label: 'Kode Produk'),
-                      const NutritionInputRow(),
-                      const RiskInputRow(),
-                      const CategoryDropdown(),
-                      const SizedBox(height: 32),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          ActionButton(text: 'Lihat Data'),
-                          ActionButton(text: 'Simpan'),
-                        ],
-                      ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 16),
+                    const ActionButtons(), // Tombol tetap di bawah
+                  ],
                 ),
               ),
             ),
@@ -108,15 +109,20 @@ class FormFieldWithLabel extends StatelessWidget {
             width: 120,
             child: Padding(
               padding: const EdgeInsets.only(top: 12),
-              child: Text(label),
+              child: Text(
+                label,
+                style: TextStyle(fontSize: 15),
+              ),
             ),
           ),
           Expanded(
             child: TextField(
+              style: TextStyle(fontSize: 12),
               decoration: InputDecoration(
                 hintText: label,
+                hintStyle: TextStyle(fontSize: 12),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(15),
                 ),
                 isDense: true,
                 contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
@@ -131,136 +137,358 @@ class FormFieldWithLabel extends StatelessWidget {
 
 
 class NutritionInputRow extends StatelessWidget {
-  const NutritionInputRow({super.key});
+  final TextEditingController nameController;
+  final TextEditingController amountController;
+  final VoidCallback onAdd;
+  final VoidCallback? onRemove;
+  final bool isLast;
+  final bool showLabel;
+
+  const NutritionInputRow({
+    super.key,
+    required this.nameController,
+    required this.amountController,
+    required this.onAdd,
+    this.onRemove,
+    required this.isLast,
+    required this.showLabel,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 120,
+            child: showLabel
+                ? const Padding(
+                    padding: EdgeInsets.only(top: 12),
+                    child: Text(
+                      'Kandungan\nNutrisi',
+                      style: TextStyle(fontSize: 14),
+                    ),
+                  )
+                : const SizedBox.shrink(),
+          ),
+          Expanded(
+            child: Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: TextField(
+                    controller: nameController,
+                    style: const TextStyle(fontSize: 12),
+                    decoration: InputDecoration(
+                      hintText: 'Nama Nutrisi',
+                      hintStyle: const TextStyle(fontSize: 12),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  flex: 1,
+                  child: TextField(
+                    controller: amountController,
+                    style: const TextStyle(fontSize: 12),
+                    decoration: InputDecoration(
+                      hintText: 'Berat',
+                      hintStyle: const TextStyle(fontSize: 12),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: Icon(isLast ? Icons.add : Icons.remove),
+                  onPressed: isLast ? onAdd : onRemove,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+
+class NutritionInputList extends StatefulWidget {
+  const NutritionInputList({super.key});
+
+  @override
+  State<NutritionInputList> createState() => _NutritionInputListState();
+}
+
+class _NutritionInputListState extends State<NutritionInputList> {
+  final List<TextEditingController> _nameControllers = [TextEditingController()];
+  final List<TextEditingController> _amountControllers = [TextEditingController()];
+
+  void _addField() {
+    setState(() {
+      _nameControllers.add(TextEditingController());
+      _amountControllers.add(TextEditingController());
+    });
+  }
+
+  void _removeField(int index) {
+    if (_nameControllers.length > 1) {
+      setState(() {
+        _nameControllers.removeAt(index);
+        _amountControllers.removeAt(index);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    for (var c in _nameControllers) {
+      c.dispose();
+    }
+    for (var c in _amountControllers) {
+      c.dispose();
+    }
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text('Kandungan Nutrisi'),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            Expanded(
-              flex: 2,
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: 'Nama Nutrisi',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              flex: 1,
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: 'gram',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            IconButton(
-              onPressed: () {},
-              icon: const Icon(Icons.add),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-      ],
+      children: List.generate(_nameControllers.length, (index) {
+        return NutritionInputRow(
+          nameController: _nameControllers[index],
+          amountController: _amountControllers[index],
+          isLast: index == _nameControllers.length - 1,
+          onAdd: _addField,
+          onRemove: () => _removeField(index),
+          showLabel: index == 0,
+        );
+      }),
     );
   }
 }
+
 
 class RiskInputRow extends StatelessWidget {
-  const RiskInputRow({super.key});
+  final TextEditingController controller;
+  final VoidCallback onAdd;
+  final VoidCallback? onRemove;
+  final bool isLast;
+  final bool showLabel; // Tambahkan flag untuk menampilkan label
+
+  const RiskInputRow({
+    super.key,
+    required this.controller,
+    required this.onAdd,
+    this.onRemove,
+    required this.isLast,
+    required this.showLabel, // Tambahkan ke konstruktor
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text('Potensi Risiko'),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            Expanded(
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: 'Potensi Risiko',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 120,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 14),
+              child: showLabel
+                  ? const Text(
+                      'Potensi Risiko',
+                      style: TextStyle(fontSize: 15),
+                    )
+                  : const SizedBox.shrink(), // sembunyikan label
+            ),
+          ),
+          Expanded(
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: controller,
+                    style: const TextStyle(fontSize: 12),
+                    decoration: InputDecoration(
+                      hintText: 'Potensi Risiko',
+                      hintStyle: const TextStyle(fontSize: 12),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                    ),
                   ),
                 ),
-              ),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: Icon(isLast ? Icons.add : Icons.remove),
+                  onPressed: isLast ? onAdd : onRemove,
+                ),
+              ],
             ),
-            const SizedBox(width: 8),
-            IconButton(
-              onPressed: () {},
-              icon: const Icon(Icons.add),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-      ],
+          ),
+        ],
+      ),
     );
   }
 }
+
+
+class RiskInputList extends StatefulWidget {
+  const RiskInputList({super.key});
+
+  @override
+  State<RiskInputList> createState() => _RiskInputListState();
+}
+
+class _RiskInputListState extends State<RiskInputList> {
+  final List<TextEditingController> _controllers = [TextEditingController()];
+
+  void _addField() {
+    setState(() {
+      _controllers.add(TextEditingController());
+    });
+  }
+
+  void _removeField(int index) {
+    setState(() {
+      _controllers.removeAt(index);
+    });
+  }
+
+  @override
+  void dispose() {
+    for (var controller in _controllers) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
+Widget build(BuildContext context) {
+  return Column(
+    children: List.generate(_controllers.length, (index) {
+      return RiskInputRow(
+        controller: _controllers[index],
+        isLast: index == _controllers.length - 1,
+        onAdd: _addField,
+        onRemove: () => _removeField(index),
+        showLabel: index == 0, // hanya baris pertama
+      );
+    }),
+  );
+}
+}
+
 
 class CategoryDropdown extends StatelessWidget {
   const CategoryDropdown({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Kategori Produk'),
-        const SizedBox(height: 8),
-        DropdownButtonFormField<String>(
-          decoration: InputDecoration(
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
+        const SizedBox(
+          width: 120,
+          child: Padding(
+            padding: EdgeInsets.only(top: 14),
+            child: Text(
+              'Kategori Produk',
+              style: TextStyle(fontSize: 15),
+              ),
           ),
-          items: const [
-            DropdownMenuItem(value: 'makanan', child: Text('Makanan')),
-            DropdownMenuItem(value: 'minuman', child: Text('Minuman')),
-          ],
-          onChanged: (value) {},
-          hint: const Text('Kategori Produk'),
+        ),
+        Expanded(
+          child: DropdownButtonFormField<String>(
+            style: TextStyle(fontSize: 12), // Selected item font
+            decoration: InputDecoration(
+              hintText: 'Kategori Produk',
+              hintStyle: TextStyle(fontSize: 12),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(15),
+              ),
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+            ),
+            items: const [
+              DropdownMenuItem(value: 'roti', child: Text('Roti')),
+              DropdownMenuItem(value: 'snack', child: Text('Snack')),
+              DropdownMenuItem(value: 'makanan', child: Text('Makanan')),
+              DropdownMenuItem(value: 'minuman', child: Text('Minuman')),
+            ],
+            onChanged: (value) {},
+            hint: const Text('Kategori Produk'),
+          ),
         ),
       ],
     );
   }
 }
 
-class ActionButton extends StatelessWidget {
-  final String text;
-
-  const ActionButton({super.key, required this.text});
+class ActionButtons extends StatelessWidget {
+  const ActionButtons({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xFF225840), // Hijau tua
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        SizedBox(
+          width: 173,
+          height: 43,
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Color(0xFF225840),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            onPressed: () {
+              // TODO: Aksi untuk tombol Lihat Data
+            },
+            child: Text(
+              'Lihat Data',
+              style: TextStyle(fontSize: 14, color: Colors.white),
+            ),
+          ),
         ),
-      ),
-      onPressed: () {},
-      child: Text(
-        text,
-        style: const TextStyle(color: Colors.white),
-      ),
+        SizedBox(width: 13),
+        SizedBox(
+          width: 173,
+          height: 43,
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Color(0xFF225840),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            onPressed: () {
+              // TODO: Aksi untuk tombol Simpan
+            },
+            child: Text(
+              'Simpan',
+              style: TextStyle(fontSize: 14, color: Colors.white),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
+
