@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class EditProfilPage extends StatefulWidget {
   @override
@@ -9,172 +8,198 @@ class EditProfilPage extends StatefulWidget {
 }
 
 class _EditProfilPageState extends State<EditProfilPage> {
-  final _formKey = GlobalKey<FormState>();
-  final _namaController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _passwordBaruController = TextEditingController();
-  final _konfirmasiPasswordController = TextEditingController();
+  final TextEditingController namaController = TextEditingController();
+  final TextEditingController teleponController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController kataSandiLamaController = TextEditingController();
+  final TextEditingController kataSandiBaruController = TextEditingController();
+  final TextEditingController konfirmasiSandiController = TextEditingController();
 
   File? _image;
 
-  @override
-  void initState() {
-    super.initState();
-    _loadProfileImage();
-  }
-
-  // Ambil gambar profil dari SharedPreferences
-  Future<void> _loadProfileImage() async {
-    final prefs = await SharedPreferences.getInstance();
-    final imagePath = prefs.getString('profile_picture');
-    if (imagePath != null && File(imagePath).existsSync()) {
-      setState(() {
-        _image = File(imagePath);
-      });
-    }
-  }
-
-  // Pilih gambar dari galeri
   Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-
+    final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       setState(() {
         _image = File(pickedFile.path);
       });
-
-      // Simpan path gambar ke SharedPreferences
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('profile_picture', pickedFile.path);
     }
   }
 
-  // Simpan data
-  void _simpanData() {
-    if (_formKey.currentState!.validate()) {
-      final passwordBaru = _passwordBaruController.text;
-      final konfirmasiPassword = _konfirmasiPasswordController.text;
+  InputDecoration inputStyle(String label) {
+    return InputDecoration(
+      labelText: label,
+      filled: true,
+      fillColor: Colors.white,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.grey.shade300),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Color(0xFF265D4F), width: 2),
+      ),
+    );
+  }
 
-      if (passwordBaru != konfirmasiPassword) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Konfirmasi password tidak cocok')),
-        );
-        return;
-      }
-
+  void _simpanPerubahan() {
+    if (namaController.text.isEmpty ||
+        teleponController.text.isEmpty ||
+        emailController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Profil berhasil diperbarui!')),
+        SnackBar(content: Text('Mohon lengkapi semua data pengguna.')),
       );
+      return;
     }
-  }
 
-  @override
-  void dispose() {
-    _namaController.dispose();
-    _emailController.dispose();
-    _passwordBaruController.dispose();
-    _konfirmasiPasswordController.dispose();
-    super.dispose();
+    if (kataSandiBaruController.text != konfirmasiSandiController.text) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Konfirmasi kata sandi tidak cocok.')),
+      );
+      return;
+    }
+
+    // Logika penyimpanan bisa ditambahkan di sini
+
+    Navigator.pop(context, _image?.path); // kirim path ke halaman sebelumnya
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Color(0xFF265D4F),
       appBar: AppBar(
-        title: Text('Edit Profil'),
+        backgroundColor: Color(0xFF265D4F),
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context, _image?.path),
+        ),
+        title: Text(
+          'Edit Profil',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
       ),
-      body: GestureDetector(
-        onTap: () => FocusScope.of(context).unfocus(), // Tutup keyboard saat tap luar
-        child: SingleChildScrollView(
-          padding: EdgeInsets.all(16),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                // Foto Profil
-                GestureDetector(
-                  onTap: _pickImage,
-                  child: CircleAvatar(
-                    radius: 60,
-                    backgroundImage:
-                        _image != null ? FileImage(_image!) : null,
-                    child: _image == null
-                        ? Icon(Icons.add_a_photo, size: 40)
-                        : null,
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Color(0xFFF9FAFB),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(40)),
+                ),
+                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Stack(
+                          alignment: Alignment.bottomRight,
+                          children: [
+                            CircleAvatar(
+                              radius: 60,
+                              backgroundImage: _image != null
+                                  ? FileImage(_image!)
+                                  : AssetImage('assets/images/eatoscan2.png') as ImageProvider,
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.camera_alt, color: Colors.black),
+                              onPressed: _pickImage,
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 24),
+                      Text(
+                        'Data Pengguna',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(height: 16),
+                      TextFormField(
+                        controller: namaController,
+                        decoration: inputStyle('Nama'),
+                      ),
+                      SizedBox(height: 16),
+                      TextFormField(
+                        controller: teleponController,
+                        decoration: inputStyle('Nomor Telepon'),
+                        keyboardType: TextInputType.phone,
+                      ),
+                      SizedBox(height: 16),
+                      TextFormField(
+                        controller: emailController,
+                        decoration: inputStyle('Email'),
+                        keyboardType: TextInputType.emailAddress,
+                      ),
+                      SizedBox(height: 32),
+                      Text(
+                        'Ganti Kata Sandi',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(height: 16),
+                      TextFormField(
+                        controller: kataSandiLamaController,
+                        decoration: inputStyle('Kata Sandi Lama'),
+                        obscureText: true,
+                      ),
+                      SizedBox(height: 16),
+                      TextFormField(
+                        controller: kataSandiBaruController,
+                        decoration: inputStyle('Kata Sandi Baru'),
+                        obscureText: true,
+                      ),
+                      SizedBox(height: 16),
+                      TextFormField(
+                        controller: konfirmasiSandiController,
+                        decoration: inputStyle('Konfirmasi Kata Sandi Baru'),
+                        obscureText: true,
+                      ),
+                      SizedBox(height: 12),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.pushNamed(context, '/lupa-kata-sandi');
+                        },
+                        child: Text(
+                          'Lupa kata sandi?',
+                          style: TextStyle(
+                            color: Colors.blue,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 28),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Color(0xFF265D4F),
+                          padding: EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onPressed: _simpanPerubahan,
+                        child: Center(
+                          child: Text(
+                            'Simpan',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                SizedBox(height: 20),
-
-                // Nama
-                TextFormField(
-                  controller: _namaController,
-                  decoration: InputDecoration(labelText: 'Nama'),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Nama tidak boleh kosong';
-                    }
-                    return null;
-                  },
-                ),
-                SizedBox(height: 16),
-
-                // Email
-                TextFormField(
-                  controller: _emailController,
-                  decoration: InputDecoration(labelText: 'Email'),
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Email tidak boleh kosong';
-                    }
-                    if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                      return 'Format email tidak valid';
-                    }
-                    return null;
-                  },
-                ),
-                SizedBox(height: 16),
-
-                // Password Baru
-                TextFormField(
-                  controller: _passwordBaruController,
-                  decoration: InputDecoration(labelText: 'Password Baru'),
-                  obscureText: true,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Password tidak boleh kosong';
-                    }
-                    if (value.length < 6) {
-                      return 'Password minimal 6 karakter';
-                    }
-                    return null;
-                  },
-                ),
-                SizedBox(height: 16),
-
-                // Konfirmasi Password
-                TextFormField(
-                  controller: _konfirmasiPasswordController,
-                  decoration:
-                      InputDecoration(labelText: 'Konfirmasi Password'),
-                  obscureText: true,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Konfirmasi password tidak boleh kosong';
-                    }
-                    return null;
-                  },
-                ),
-                SizedBox(height: 24),
-
-                ElevatedButton(
-                  onPressed: _simpanData,
-                  child: Text('Simpan'),
-                ),
-              ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );

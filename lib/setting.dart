@@ -6,8 +6,7 @@ import 'edit_riwayat_kesehatan.dart';
 
 void main() {
   runApp(MaterialApp(
-    debugShowCheckedModeBanner: false,
-    home: SettingPage(),
+    home: SettingPage(), // ganti dengan nama widget utama yang ada di file ini
   ));
 }
 
@@ -15,7 +14,7 @@ class SettingPage extends StatefulWidget {
   const SettingPage({super.key});
 
   @override
-  State<SettingPage>  createState() => _SettingPageState();
+  State<SettingPage> createState() => _SettingPageState();
 }
 
 class _SettingPageState extends State<SettingPage> {
@@ -53,148 +52,162 @@ class _SettingPageState extends State<SettingPage> {
   }
 
   void _showLogoutDialog() {
-  showDialog(
-    context: context,
-    barrierDismissible: false,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        contentPadding: EdgeInsets.fromLTRB(24, 24, 24, 16),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Apakah Anda yakin ingin keluar dari akun ini?',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-                color: Colors.black,
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          contentPadding: EdgeInsets.fromLTRB(24, 24, 24, 16),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Apakah Anda yakin ingin keluar dari akun ini?',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: Colors.black,
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                // Tombol Ya
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+              SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
                     ),
-                    padding: EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                    onPressed: () async {
+                      Navigator.of(context).pop();
+                      SharedPreferences prefs = await SharedPreferences.getInstance();
+                      await prefs.clear();
+                      Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+                    },
+                    child: Text('Ya', style: TextStyle(color: Colors.white)),
                   ),
-                  onPressed: () async {
-                    Navigator.of(context).pop(); // tutup dialog
-                    // Tambahkan logika logout di sini
-                    SharedPreferences prefs = await SharedPreferences.getInstance();
-                    await prefs.clear(); // bersihkan data login
-                    Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false,);
-                  },
-                  child: Text(
-                    'Ya',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-                // Tombol Tidak
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.grey[800],
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.grey[800],
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                     ),
-                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: Text('Tidak', style: TextStyle(color: Colors.white)),
                   ),
-                  onPressed: () {
-                    Navigator.of(context).pop(); // tutup dialog
-                  },
-                  child: Text(
-                    'Tidak',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                ),
-              ],
-            )
-          ],
-        ),
-      );
-    },
-  );
-}
+                ],
+              )
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFF9FAFB),
-      appBar: AppBar(
-        backgroundColor: Color(0xFF2D6A4F),
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          'Pengaturan',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-      ),
-      body: Column(
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              color: Color(0xFF2D6A4F),
-              borderRadius: BorderRadius.vertical(bottom: Radius.circular(40)),
-            ),
-            padding: EdgeInsets.only(top: 16, bottom: 32),
-            child: Column(
-              children: [
-                CircleAvatar(
-                  radius: 60,
-                  backgroundImage: _profileImage != null
-                      ? FileImage(_profileImage!)
-                      : AssetImage('assets/images/default_profil.jpg') as ImageProvider,
-                ),
-                SizedBox(height: 12),
-                Text(
-                  _userName,
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
+      backgroundColor: const Color(0xFF2F684A),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.white),
+                    onPressed: () => Navigator.pop(context),
                   ),
+                  const Expanded(
+                    child: Center(
+                      child: Text(
+                        'Pengaturan',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 48), // dummy space
+                ],
+              ),
+            ),
+            Expanded(
+              child: Container(
+                decoration: const BoxDecoration(
+                  color: Color(0xFFF9FAFB),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(40)),
                 ),
-                Text(
-                  _userEmail,
-                  style: TextStyle(color: Colors.black54),
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(top: 24, bottom: 24),
+                      child: Column(
+                        children: [
+                          CircleAvatar(
+                            radius: 60,
+                            backgroundImage: _profileImage != null
+                                ? FileImage(_profileImage!)
+                                : const AssetImage('assets/images/default_profil.jpg')
+                                    as ImageProvider,
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            _userName,
+                            style: const TextStyle(
+                              color: Colors.black,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            _userEmail,
+                            style: const TextStyle(color: Colors.black54),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Divider(thickness: 1),
+                    Expanded(
+                      child: ListView(
+                        children: [
+                          _buildMenuItem(Icons.person, 'Edit Profil', _navigateToEditProfile),
+                          _buildMenuItem(Icons.favorite_border, 'Edit Riwayat Kesehatan', () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const EditRiwayatKesehatanPage()),
+                            );
+                          }),
+                          _buildMenuItem(Icons.logout, 'Keluar', _showLogoutDialog),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: Image.asset(
+                        'assets/images/eatoscan1.png',
+                        height: 40,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
-          SizedBox(height: 20),
-          Expanded(
-            child: ListView(
-              children: [
-                _buildMenuItem(Icons.person, 'Edit Profil', _navigateToEditProfile),
-                _buildMenuItem(Icons.favorite_border, 'Edit Riwayat Kesehatan', () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const EditRiwayatKesehatanPage()),
-                  );
-                }),
-                _buildMenuItem(Icons.logout, 'Keluar', _showLogoutDialog),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 16),
-            child: Image.asset(
-              'assets/images/eatoscan1.png',
-              height: 40,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -206,11 +219,11 @@ class _SettingPageState extends State<SettingPage> {
           leading: Icon(icon, color: Colors.black),
           title: Text(
             title,
-            style: TextStyle(fontWeight: FontWeight.w600),
+            style: const TextStyle(fontWeight: FontWeight.w600),
           ),
           onTap: onTap,
         ),
-        Divider(),
+        const Divider(),
       ],
     );
   }
