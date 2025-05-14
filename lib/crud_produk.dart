@@ -1,4 +1,3 @@
-import 'package:eatoscan/dashboard_admin.dart';
 import 'package:flutter/material.dart';
 import 'package:eatoscan/db_helper.dart';
 import 'package:eatoscan/lihat_produk.dart';
@@ -117,10 +116,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
                     alignment: Alignment.centerLeft,
                     child: IconButton(
                       onPressed: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(builder: (context) => DashboardAdmin()),
-                        );
+                        Navigator.pushReplacementNamed(context, '/dashboard');
                       },
                       icon: const Icon(Icons.arrow_back, color: Colors.white),
                     ),

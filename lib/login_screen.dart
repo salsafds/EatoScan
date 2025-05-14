@@ -59,26 +59,25 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildWelcomeText() {
-    return Column(
-      children: [
-        Padding(
-          padding: EdgeInsets.only(left: 24), // Beri jarak 16dp dari sisi kiri
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
+  return Padding(
+  padding: const EdgeInsets.only(left: 16, top: 5, right: 16),
+  child: Stack(
+    children: [
+      // Teks yang rata kanan, lebarnya full layar
+      SizedBox(
+        width: double.infinity,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: const [
+            Text(
               'Selamat Datang di',
               style: TextStyle(
                 fontSize: 20,
                 color: Colors.white,
               ),
             ),
-          ),
-        ),
-        Padding(
-          padding: EdgeInsets.only(left: 24), // Beri jarak 16dp dari sisi kiri
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
+            SizedBox(height: 4),
+            Text(
               'EatoScan',
               style: TextStyle(
                 fontSize: 28,
@@ -86,11 +85,22 @@ class _LoginScreenState extends State<LoginScreen> {
                 color: Colors.white,
               ),
             ),
-          ),
+          ],
         ),
-      ],
-    );
-  }
+      ),
+
+      // Tombol back di pojok kiri
+      IconButton(
+        onPressed: () {
+          Navigator.pushReplacementNamed(context, '/landingPage');
+        },
+        icon: const Icon(Icons.arrow_back, color: Colors.white),
+      ),
+    ],
+  ),
+);
+}
+
 
   Widget _buildLoginForm() {
     return Container(
