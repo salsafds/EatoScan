@@ -17,6 +17,8 @@ class _EditProdukPageState extends State<EditProdukPage> {
   late TextEditingController _kodeController;
   late List<TextEditingController> _nutrisiNamaControllers;
   late List<TextEditingController> _nutrisiBeratControllers;
+  late List<TextEditingController> _risikoControllers;
+  String? _selectedKategori;
 
   @override
   void initState() {
@@ -29,7 +31,7 @@ class _EditProdukPageState extends State<EditProdukPage> {
 
     final nutrisiList = widget.produk.nutrisi.split(', ');
     for (var n in nutrisiList) {
-      final match = RegExp(r'(.+)\s\((.+)\)').firstMatch(n);
+      final match = RegExp(r'(.+)\s\((.+) g\)').firstMatch(n);
       _nutrisiNamaControllers.add(
         TextEditingController(text: match?.group(1) ?? ""),
       );
@@ -38,10 +40,21 @@ class _EditProdukPageState extends State<EditProdukPage> {
       );
     }
 
-    // Pastikan ada 1 field minimal
+    _risikoControllers =
+        widget.produk.risiko
+            .split(', ')
+            .map((r) => TextEditingController(text: r))
+            .toList();
+
+    _selectedKategori = widget.produk.tambahan;
+
     if (_nutrisiNamaControllers.isEmpty) {
       _nutrisiNamaControllers.add(TextEditingController());
       _nutrisiBeratControllers.add(TextEditingController());
+    }
+
+    if (_risikoControllers.isEmpty) {
+      _risikoControllers.add(TextEditingController());
     }
   }
 
@@ -51,6 +64,7 @@ class _EditProdukPageState extends State<EditProdukPage> {
     _kodeController.dispose();
     for (var c in _nutrisiNamaControllers) c.dispose();
     for (var c in _nutrisiBeratControllers) c.dispose();
+    for (var c in _risikoControllers) c.dispose();
     super.dispose();
   }
 
@@ -60,9 +74,15 @@ class _EditProdukPageState extends State<EditProdukPage> {
       final nama = _nutrisiNamaControllers[i].text.trim();
       final berat = _nutrisiBeratControllers[i].text.trim();
       if (nama.isNotEmpty && berat.isNotEmpty) {
-        updatedNutrisi.add('$nama ($berat)');
+        updatedNutrisi.add('$nama ($berat g)');
       }
     }
+
+    final updatedRisiko =
+        _risikoControllers
+            .map((e) => e.text.trim())
+            .where((e) => e.isNotEmpty)
+            .toList();
 
     if (_namaController.text.isEmpty || _kodeController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -75,8 +95,8 @@ class _EditProdukPageState extends State<EditProdukPage> {
       nama: _namaController.text,
       kode: _kodeController.text,
       nutrisi: updatedNutrisi.join(', '),
-      tambahan: widget.produk.tambahan,
-      risiko: widget.produk.risiko,
+      tambahan: _selectedKategori ?? 'Tidak diketahui',
+      risiko: updatedRisiko.join(', '),
     );
 
     final box = Hive.box<ProdukModel>('produk');
@@ -96,6 +116,18 @@ class _EditProdukPageState extends State<EditProdukPage> {
     setState(() {
       _nutrisiNamaControllers.removeAt(index);
       _nutrisiBeratControllers.removeAt(index);
+    });
+  }
+
+  void _addRisikoField() {
+    setState(() {
+      _risikoControllers.add(TextEditingController());
+    });
+  }
+
+  void _removeRisikoField(int index) {
+    setState(() {
+      _risikoControllers.removeAt(index);
     });
   }
 
@@ -128,7 +160,7 @@ class _EditProdukPageState extends State<EditProdukPage> {
                     children: [
                       const Center(
                         child: Text(
-                          'Data Produk',
+                          'Ubah Data Produk',
                           style: TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.bold,
@@ -149,7 +181,7 @@ class _EditProdukPageState extends State<EditProdukPage> {
                               child: TextField(
                                 controller: _nutrisiNamaControllers[index],
                                 decoration: const InputDecoration(
-                                  hintText: 'Nama',
+                                  hintText: 'Nama Nutrisi',
                                 ),
                               ),
                             ),
@@ -159,7 +191,7 @@ class _EditProdukPageState extends State<EditProdukPage> {
                               child: TextField(
                                 controller: _nutrisiBeratControllers[index],
                                 decoration: const InputDecoration(
-                                  hintText: 'Berat',
+                                  hintText: 'Berat (g)',
                                 ),
                               ),
                             ),
@@ -183,6 +215,67 @@ class _EditProdukPageState extends State<EditProdukPage> {
                         );
                       }),
                       const SizedBox(height: 24),
+                      const Text('Potensi Risiko'),
+                      const SizedBox(height: 8),
+                      ...List.generate(_risikoControllers.length, (index) {
+                        return Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: _risikoControllers[index],
+                                decoration: const InputDecoration(
+                                  hintText: 'Potensi Risiko',
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            IconButton(
+                              icon: Icon(
+                                index == _risikoControllers.length - 1
+                                    ? Icons.add
+                                    : Icons.remove,
+                              ),
+                              onPressed: () {
+                                if (index == _risikoControllers.length - 1) {
+                                  _addRisikoField();
+                                } else {
+                                  _removeRisikoField(index);
+                                }
+                              },
+                            ),
+                          ],
+                        );
+                      }),
+                      const SizedBox(height: 24),
+                      const Text('Kategori Produk'),
+                      const SizedBox(height: 8),
+                      DropdownButtonFormField<String>(
+                        value: _selectedKategori,
+                        onChanged:
+                            (val) => setState(() => _selectedKategori = val),
+                        items: const [
+                          DropdownMenuItem(value: 'roti', child: Text('Roti')),
+                          DropdownMenuItem(
+                            value: 'snack',
+                            child: Text('Snack'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'makanan',
+                            child: Text('Makanan'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'minuman',
+                            child: Text('Minuman'),
+                          ),
+                        ],
+                        decoration: InputDecoration(
+                          hintText: 'Pilih Kategori',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 32),
                       Center(
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(

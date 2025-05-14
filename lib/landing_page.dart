@@ -127,7 +127,7 @@ class _LandingPageState extends State<LandingPage> {
                               children: [
                                 // Gambar placeholder (jika tidak ada gambar)
                                 Image.asset(
-                                  "assets/images/eatoscan.jpg", // default image
+                                  "assets/images/eatoscan.png", // default image
                                   width: 60,
                                   height: 60,
                                 ),

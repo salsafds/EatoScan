@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'produk_model.dart';
+import 'edit_produk.dart';
 
 class LihatProdukPage extends StatefulWidget {
   const LihatProdukPage({Key? key}) : super(key: key);
@@ -103,14 +104,18 @@ class _LihatProdukPageState extends State<LihatProdukPage> {
                     selectedIndex != null
                         ? () {
                           final produk = produkBox.getAt(selectedIndex!);
-                          Navigator.pushNamed(
+                          Navigator.push(
                             context,
-                            '/edit_produk',
-                            arguments: {
-                              'index': selectedIndex,
-                              'produk': produk,
-                            },
-                          );
+                            MaterialPageRoute(
+                              builder:
+                                  (_) => EditProdukPage(
+                                    index: selectedIndex!,
+                                    produk: produk!,
+                                  ),
+                            ),
+                          ).then(
+                            (_) => setState(() {}),
+                          ); // untuk refresh setelah edit
                         }
                         : null,
                 style: ElevatedButton.styleFrom(
