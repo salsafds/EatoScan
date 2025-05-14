@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'edit_profil.dart';
-import 'edit_riwayatKesehatan.dart';
+import 'edit_riwayat_kesehatan.dart';
 
 void main() {
   runApp(MaterialApp(
