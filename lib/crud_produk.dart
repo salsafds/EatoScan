@@ -1,6 +1,14 @@
 import 'package:flutter/material.dart';
+<<<<<<< HEAD
 import 'package:eatoscan/db_helper.dart';
 import 'package:eatoscan/lihat_produk.dart';
+=======
+// import 'package:eatoscan/db_helper.dart';
+
+void main() {
+  runApp(const CrudProduk());
+}
+>>>>>>> a8462de67623da2741091517cffbe4c2b5e83c06
 
 class CrudProduk extends StatelessWidget {
   const CrudProduk({super.key});
