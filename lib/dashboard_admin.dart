@@ -2,15 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:iconsax/iconsax.dart';
 
-void main() {
-  runApp(
-    const Directionality(
-      textDirection: TextDirection.ltr,
-      child: DashboardAdmin(),
-    ),
-  );
-}
-
 class DashboardAdmin extends StatelessWidget {
   const DashboardAdmin({super.key});
 

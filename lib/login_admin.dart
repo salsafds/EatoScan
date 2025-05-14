@@ -8,15 +8,20 @@ class LoginAdmin extends StatefulWidget {
 }
 
 class _LoginAdminState extends State<LoginAdmin> {
-  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
   void _handleLogin() {
-    final username = _usernameController.text.trim();
+    final email = _emailController.text.trim();
     final password = _passwordController.text;
 
-    if (username.isEmpty || password.isEmpty) {
+    if (email.isEmpty || password.isEmpty) {
       _showMessage('Semua kolom harus diisi!');
+      return;
+    }
+
+    if (!RegExp(r"^[\w\.-]+@[\w\.-]+\.\w{2,4}$").hasMatch(email)) {
+      _showMessage('Format email tidak valid!');
       return;
     }
 
@@ -25,10 +30,10 @@ class _LoginAdminState extends State<LoginAdmin> {
       return;
     }
 
-    // if (!RegExp(r"^[\w\.-]+@[\w\.-]+\.\w{2,4}$").hasMatch(email)) {
-    //   _showMessage('Format email tidak valid!');
-    //   return;
-    // }
+    if (password != 'admin123' || email!= 'eatoscan@gmail.com') {
+      _showMessage('Password atau email tidak sesuai!');
+      return;
+    }
 
     // TODO: Add login logic
     // String password = _passwordController.text;
@@ -126,7 +131,7 @@ class _LoginAdminState extends State<LoginAdmin> {
             //   ),
             // ),
             const SizedBox(height: 32),
-            _buildTextField(_usernameController, 'Masukkan nama admin', 'Nama'),
+            _buildTextField(_emailController, 'abcd@gmail.com', 'Email'),
             const SizedBox(height: 20),
             _buildTextField(_passwordController, 'Masukkan kata sandi', 'Kata Sandi', obscureText: true),
             const SizedBox(height: 24),

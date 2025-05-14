@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:eatoscan/db_helper.dart';
+// import 'package:eatoscan/db_helper.dart';
 
 void main() {
   runApp(const CrudProduk());

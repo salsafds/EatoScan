@@ -1,3 +1,4 @@
+import 'package:eatoscan/dashboard_admin.dart';
 import 'package:eatoscan/home_page.dart';
 import 'package:eatoscan/produk_model.dart';
 import 'package:eatoscan/setting.dart';
@@ -44,6 +45,7 @@ class MyApp extends StatelessWidget {
         '/landingPage': (context) => LandingPage(),
         '/crudAdmin': (context) => const CrudProduk(),
         '/setting': (context) => SettingPage(),
+        '/dashboard': (context) => DashboardAdmin(),
         // '/scan': (context) => ScanScreen(),
         // '/info': (context) => InformasiScreen(),
         // '/rekom': (context) => RekomendasiScreen(),
