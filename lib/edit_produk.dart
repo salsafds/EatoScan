@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:eatoscan/produk_model.dart';
+import 'package:eatoscan/lihat_produk.dart';
 import 'package:hive/hive.dart';
 
 class EditProdukPage extends StatefulWidget {
@@ -102,7 +103,59 @@ class _EditProdukPageState extends State<EditProdukPage> {
     final box = Hive.box<ProdukModel>('produk');
     await box.putAt(widget.index, updatedProduk);
 
-    Navigator.pop(context);
+    Navigator.pop(context, true);
+  }
+
+  void _konfirmasiSimpan() {
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Konfirmasi'),
+            content: const Text('Yakin ingin menyimpan perubahan data produk?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Batal'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context); // tutup dialog
+                  Navigator.pop(context, true); // kirim sinyal "data berubah"
+                },
+                child: const Text('Simpan'),
+              ),
+            ],
+          ),
+    );
+  }
+
+  void _konfirmasiBatal() {
+    showDialog(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Batalkan Perubahan'),
+            content: const Text(
+              'Yakin ingin membatalkan perubahan dan kembali?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Tidak'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context); // tutup dialog
+                  Navigator.pop(
+                    context,
+                  ); // kembali ke LihatProdukPage yang asli
+                },
+                child: const Text('Ya, Batalkan'),
+              ),
+            ],
+          ),
+    );
   }
 
   void _addNutrisiField() {
@@ -276,24 +329,44 @@ class _EditProdukPageState extends State<EditProdukPage> {
                         ),
                       ),
                       const SizedBox(height: 32),
-                      Center(
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF225840),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 40,
-                              vertical: 12,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.grey.shade600,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 32,
+                                vertical: 12,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                            onPressed: _konfirmasiBatal,
+                            child: const Text(
+                              'Batal',
+                              style: TextStyle(color: Colors.white),
                             ),
                           ),
-                          onPressed: _updateProduk,
-                          child: const Text(
-                            'Simpan',
-                            style: TextStyle(color: Colors.white),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF225840),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 32,
+                                vertical: 12,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            onPressed: _konfirmasiSimpan,
+                            child: const Text(
+                              'Simpan',
+                              style: TextStyle(color: Colors.white),
+                            ),
                           ),
-                        ),
+                        ],
                       ),
                     ],
                   ),

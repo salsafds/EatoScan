@@ -102,9 +102,9 @@ class _LihatProdukPageState extends State<LihatProdukPage> {
               ElevatedButton(
                 onPressed:
                     selectedIndex != null
-                        ? () {
+                        ? () async {
                           final produk = produkBox.getAt(selectedIndex!);
-                          Navigator.push(
+                          final result = await Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder:
@@ -113,9 +113,10 @@ class _LihatProdukPageState extends State<LihatProdukPage> {
                                     produk: produk!,
                                   ),
                             ),
-                          ).then(
-                            (_) => setState(() {}),
-                          ); // untuk refresh setelah edit
+                          );
+                          if (result == true) {
+                            setState(() {}); // refresh jika kembali dari edit
+                          }
                         }
                         : null,
                 style: ElevatedButton.styleFrom(
