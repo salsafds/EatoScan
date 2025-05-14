@@ -15,7 +15,8 @@ class _SplashScreenState extends State<SplashScreen> {
 
     Future.delayed(const Duration(seconds: 3), () {
       if (mounted) {
-        Navigator.pushReplacement(context,
+        Navigator.pushReplacement(
+          context,
           MaterialPageRoute(builder: (context) => const LandingPage()),
         );
       }
@@ -25,9 +26,7 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Image.asset('assets/images/eatoscan.png'),
-      ),
+      body: Center(child: Image.asset('../assets/images/eatoscan.png')),
     );
   }
 }
