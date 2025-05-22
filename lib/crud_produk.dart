@@ -50,56 +50,84 @@ class _ProductFormPageState extends State<ProductFormPage> {
   }
 
   void _simpanProduk() async {
+    // Validate required fields
+    if (_namaController.text.isEmpty || _kodeController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Gagal: Nama dan kode produk harus diisi.'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
+
+    // Validate nutrition fields
     final nutrisiList = <String>[];
     for (int i = 0; i < _nutrisiNamaControllers.length; i++) {
       final nama = _nutrisiNamaControllers[i].text.trim();
       final berat = _nutrisiBeratControllers[i].text.trim();
-      if (nama.isNotEmpty && berat.isNotEmpty) {
-        nutrisiList.add('$nama ($berat g)');
-      }else{
+      if (nama.isEmpty || berat.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Nama dan nutrisi harus diisi.')),
+          const SnackBar(
+            content: Text('Gagal: Nama dan berat nutrisi harus diisi.'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 3),
+          ),
         );
         return;
       }
+      nutrisiList.add('$nama ($berat g)');
     }
 
+    // Collect risiko list
     final risikoList =
         _risikoControllers
             .map((e) => e.text.trim())
             .where((e) => e.isNotEmpty)
             .toList();
 
-    if (_namaController.text.isEmpty || _kodeController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Nama dan kode harus diisi.')),
+    try {
+      // Create and save the product
+      final produk = ProdukModel(
+        nama: _namaController.text,
+        kode: _kodeController.text,
+        nutrisi: nutrisiList.join(', '),
+        tambahan: _selectedKategori ?? 'Tidak diketahui',
+        risiko: risikoList.join(', '),
       );
-      return;
+
+      final produkBox = Hive.box<ProdukModel>('produk');
+      await produkBox.add(produk);
+
+      // Clear input fields
+      _namaController.clear();
+      _kodeController.clear();
+      for (var c in _nutrisiNamaControllers) c.clear();
+      for (var c in _nutrisiBeratControllers) c.clear();
+      for (var c in _risikoControllers) c.clear();
+      _selectedKategori = null;
+
+      setState(() {});
+
+      // Show success notification
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Sukses: Produk berhasil disimpan.'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 3),
+        ),
+      );
+    } catch (e) {
+      // Show failure notification for unexpected errors
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal: Terjadi kesalahan saat menyimpan produk. ($e)'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 3),
+        ),
+      );
     }
-
-    final produk = ProdukModel(
-    nama: _namaController.text,
-    kode: _kodeController.text,
-    nutrisi: nutrisiList.join(', '),
-    tambahan: _selectedKategori ?? 'Tidak diketahui',
-    risiko: risikoList.join(', '),
-    );
-
-    final produkBox = Hive.box<ProdukModel>('produk');
-    await produkBox.add(produk);
-
-    _namaController.clear();
-    _kodeController.clear();
-    for (var c in _nutrisiNamaControllers) c.clear();
-    for (var c in _nutrisiBeratControllers) c.clear();
-    for (var c in _risikoControllers) c.clear();
-    _selectedKategori = null;
-
-    setState(() {});
-
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Produk berhasil disimpan.')));
   }
 
   void _lihatData() {
