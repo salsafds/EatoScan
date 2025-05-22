@@ -1,6 +1,8 @@
+import 'package:eatoscan/produk_model.dart';
 import 'package:flutter/material.dart';
-import 'package:eatoscan/db_helper.dart';
+// import 'package:eatoscan/db_helper.dart';
 import 'package:eatoscan/lihat_produk.dart';
+import 'package:hive/hive.dart';
 
 class CrudProduk extends StatelessWidget {
   const CrudProduk({super.key});
@@ -54,6 +56,11 @@ class _ProductFormPageState extends State<ProductFormPage> {
       final berat = _nutrisiBeratControllers[i].text.trim();
       if (nama.isNotEmpty && berat.isNotEmpty) {
         nutrisiList.add('$nama ($berat g)');
+      }else{
+        ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Nama dan nutrisi harus diisi.')),
+        );
+        return;
       }
     }
 
@@ -70,14 +77,16 @@ class _ProductFormPageState extends State<ProductFormPage> {
       return;
     }
 
-    final db = DBHelper();
-    await db.addProduk(
-      nama: _namaController.text,
-      kode: _kodeController.text,
-      nutrisi: nutrisiList.join(', '),
-      tambahan: _selectedKategori ?? 'Tidak diketahui',
-      risiko: risikoList.join(', '),
+    final produk = ProdukModel(
+    nama: _namaController.text,
+    kode: _kodeController.text,
+    nutrisi: nutrisiList.join(', '),
+    tambahan: _selectedKategori ?? 'Tidak diketahui',
+    risiko: risikoList.join(', '),
     );
+
+    final produkBox = Hive.box<ProdukModel>('produk');
+    await produkBox.add(produk);
 
     _namaController.clear();
     _kodeController.clear();

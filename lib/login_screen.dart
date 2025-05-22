@@ -1,6 +1,8 @@
+import 'package:eatoscan/user_model.dart';
 import 'package:flutter/material.dart';
-import 'package:eatoscan/db_helper.dart';
-// import 'package:eatoscan/db_helper.dart';
+import 'package:hive/hive.dart';
+import 'package:collection/collection.dart';
+
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -12,7 +14,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final DBHelper dbHelper = DBHelper();
+  // final DBHelper dbHelper = DBHelper();
 
   void _handleLogin() async {
     final username = _usernameController.text.trim();
@@ -28,7 +30,25 @@ class _LoginScreenState extends State<LoginScreen> {
       return;
     }
 
-    Navigator.pushReplacementNamed(context, '/homepage', arguments: username);
+    try {
+      final userBox = Hive.box<UserModel>('users');
+      final user = userBox.values.firstWhereOrNull(
+        (u) => u.username == username && u.password == password,
+      );
+
+      if (user != null) {
+        final box = Hive.box('eatoscanBox');
+        await box.put('loggedInUser', username);
+        await box.put('isLoggedIn', true);
+
+        if (!mounted) return;
+        Navigator.pushReplacementNamed(context, '/landingPage', arguments: username);
+      } else {
+        _showMessage('Username atau password salah!');
+      }
+    } catch (e) {
+      _showMessage('Terjadi kesalahan saat login: $e');
+    }
   }
 
   void _showMessage(String message) {

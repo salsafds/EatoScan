@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'edit_profil.dart';
 import 'edit_riwayat_kesehatan.dart';
@@ -19,8 +20,8 @@ class SettingPage extends StatefulWidget {
 
 class _SettingPageState extends State<SettingPage> {
   File? _profileImage;
-  String _userName = 'Bromo';
-  String _userEmail = 'bromo@gmail.com';
+  String _userName = 'Guest';
+  String _userEmail = 'guest@example.com';
 
   @override
   void initState() {
@@ -30,9 +31,18 @@ class _SettingPageState extends State<SettingPage> {
 
   Future<void> _loadProfileData() async {
     final prefs = await SharedPreferences.getInstance();
+    final box = Hive.box('user');
+    
+    final currentUser = box.get('loggedInUser');
+    final name = box.get('user_name_$currentUser');
+    final email = box.get('user_email_$currentUser');
     final imagePath = prefs.getString('profile_picture');
-    final name = prefs.getString('user_name') ?? 'Bromo';
-    final email = prefs.getString('user_email') ?? 'bromo@gmail.com';
+
+      // setState(() {
+      //   _userName = name;
+      //   _userEmail = email;
+      //   _profileImage = imagePath != null ? File(imagePath) : null;
+      // });
 
     setState(() {
       if (imagePath != null && File(imagePath).existsSync()) {
@@ -87,7 +97,10 @@ class _SettingPageState extends State<SettingPage> {
                       Navigator.of(context).pop();
                       SharedPreferences prefs = await SharedPreferences.getInstance();
                       await prefs.clear();
-                      Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+                        final box = Hive.box('eatoscanBox');
+                        await box.delete('loggedInUser');
+                        await box.put('isLoggedIn', false);
+                        Navigator.pushNamedAndRemoveUntil(context, '/landingPage',(Route<dynamic> route) => false,);
                     },
                     child: Text('Ya', style: TextStyle(color: Colors.white)),
                   ),
@@ -126,7 +139,7 @@ class _SettingPageState extends State<SettingPage> {
                 children: [
                   IconButton(
                     icon: const Icon(Icons.arrow_back, color: Colors.white),
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () => Navigator.pushReplacementNamed(context, '/landingPage'),
                   ),
                   const Expanded(
                     child: Center(

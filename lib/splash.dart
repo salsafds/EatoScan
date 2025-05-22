@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'landing_page.dart'; // Ganti dengan halaman tujuanmu
+// import 'package:hive/hive.dart';
+// import 'landing_page.dart'; // Ganti dengan halaman tujuanmu
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -10,18 +11,23 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> {
   @override
-  void initState() {
-    super.initState();
+void initState() {
+  super.initState();
+  Future.delayed(const Duration(seconds: 3), () async {
+    if (!mounted) return;
 
-    Future.delayed(const Duration(seconds: 3), () {
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const LandingPage()),
-        );
-      }
-    });
-  }
+    // final box = Hive.box('eatoscanBox');
+    // final isLoggedIn = box.get('isLoggedIn', defaultValue: false);
+
+    // if (isLoggedIn) {
+    //   Navigator.pushReplacementNamed(context, '/landingPage');
+    // } else {
+    //   Navigator.pushReplacementNamed(context, '/login');
+    // }
+    Navigator.pushReplacementNamed(context, '/landingPage');
+  });
+}
+
 
   @override
   Widget build(BuildContext context) {

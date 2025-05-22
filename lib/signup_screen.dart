@@ -1,6 +1,6 @@
+import 'package:eatoscan/user_model.dart';
 import 'package:flutter/material.dart';
-import 'package:eatoscan/db_helper.dart';
-import 'login_screen.dart';
+import 'package:hive/hive.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -14,8 +14,7 @@ class _SignupScreenState extends State<SignupScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _konfirController = TextEditingController();
-  final DBHelper dbHelper = DBHelper(); 
-
+  
     void _submitForm() async {
     final username = _usernameController.text.trim();
     final email = _emailController.text.trim();
@@ -43,13 +42,22 @@ class _SignupScreenState extends State<SignupScreen> {
     }
 
     try {
-      await dbHelper.addUser(username: username, email: email, password: password);
-      _showMessage('Data berhasil disimpan');
+      final userBox = Hive.box<UserModel>('users');
+
+      // Cek apakah username atau email sudah terdaftar
+      final isExist = userBox.values.any((u) => u.username == username || u.email == email);
+      if (isExist) {
+        _showMessage('Username atau email sudah digunakan!');
+        return;
+      }
+
+      // Simpan ke Hive
+      final newUser = UserModel(username: username, email: email, password: password);
+      await userBox.add(newUser);
+
+      _showMessage('Akun berhasil dibuat!');
       if (!mounted) return;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => LoginScreen()),
-      );
+      Navigator.pushReplacementNamed(context, '/login');
     } catch (e) {
       _showMessage('Gagal menyimpan: $e');
     }

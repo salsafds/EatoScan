@@ -1,5 +1,10 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:hive/hive.dart'; 
+import 'package:path_provider/path_provider.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+
 import 'package:eatoscan/dashboard_admin.dart';
-import 'package:eatoscan/home_page.dart';
 import 'package:eatoscan/produk_model.dart';
 import 'package:eatoscan/setting.dart';
 import 'package:eatoscan/splash.dart';
@@ -8,7 +13,6 @@ import 'package:hive_flutter/adapters.dart';
 
 import 'signup_screen.dart';
 import 'login_admin.dart';
-import 'package:flutter/material.dart';
 import 'login_screen.dart';
 import 'landing_page.dart';
 import 'crud_produk.dart';
@@ -16,11 +20,28 @@ import 'crud_produk.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Hive.initFlutter();
-  Hive.registerAdapter(UserModelAdapter());
-  Hive.registerAdapter(ProdukModelAdapter());
-  await Hive.openBox<UserModel>('users');
-  await Hive.openBox<ProdukModel>('produk');
+  if (kIsWeb) {
+    // Web: Tidak pakai path_provider
+    Hive.registerAdapter(UserModelAdapter());
+    Hive.registerAdapter(ProdukModelAdapter());
+
+    await Hive.openBox('eatoscanBox');
+    await Hive.openBox<UserModel>('users');
+    await Hive.openBox<ProdukModel>('produk');
+    await Hive.openBox('user');
+  } else {
+    // Mobile (Android/iOS)
+    final appDocumentDir = await getApplicationDocumentsDirectory();
+    Hive.init(appDocumentDir.path);
+
+    Hive.registerAdapter(UserModelAdapter());
+    Hive.registerAdapter(ProdukModelAdapter());
+
+    await Hive.openBox('eatoscanBox');
+    await Hive.openBox<UserModel>('users');
+    await Hive.openBox<ProdukModel>('produk');
+    await Hive.openBox('user');
+  }
   runApp(const MyApp());
 }
 
@@ -52,15 +73,7 @@ class MyApp extends StatelessWidget {
         
       },
       // Gunakan onGenerateRoute untuk meng-handle route yang butuh arguments
-      onGenerateRoute: (settings) {
-        if (settings.name == '/homepage') {
-          final username = settings.arguments as String;
-          return MaterialPageRoute(
-            builder: (context) => HomePage(username: username),
-          );
-        }
-        return null;
-      },
+      onGenerateRoute: (settings) => null,
     );
   }
 }

@@ -16,42 +16,41 @@ class _LihatProdukPageState extends State<LihatProdukPage> {
   @override
   void initState() {
     super.initState();
-    produkBox = Hive.box<ProdukModel>('produk'); // Membuka box produk
+    produkBox = Hive.box<ProdukModel>('produk');
   }
 
   void hapusProduk(int index) {
     showDialog(
       context: context,
-      builder:
-          (_) => AlertDialog(
-            title: const Text('Konfirmasi'),
-            content: const Text('Yakin ingin menghapus produk ini?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Batal'),
-              ),
-              TextButton(
-                onPressed: () {
-                  produkBox.deleteAt(index); // Menghapus produk dari box
-                  setState(() {
-                    selectedIndex = null; // Reset selected index
-                  });
-                  Navigator.of(context).pop();
-                },
-                child: const Text('Hapus'),
-              ),
-            ],
+      builder: (_) => AlertDialog(
+        title: const Text('Konfirmasi'),
+        content: const Text('Yakin ingin menghapus produk ini?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Batal'),
           ),
+          TextButton(
+            onPressed: () {
+              produkBox.deleteAt(index);
+              setState(() {
+                selectedIndex = null;
+              });
+              Navigator.of(context).pop();
+            },
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final produkList = produkBox.values.toList(); // Mengambil semua produk
+    final produkList = produkBox.values.toList();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFE85D04), // warna oranye
+      backgroundColor: const Color(0xFFE85D04),
       body: SafeArea(
         child: Column(
           children: [
@@ -109,7 +108,6 @@ class _LihatProdukPageState extends State<LihatProdukPage> {
                             itemCount: produkList.length + 1,
                             itemBuilder: (context, index) {
                               if (index == 0) {
-                                // Header tabel
                                 return Container(
                                   color: const Color(0xFFDDDDDD),
                                   padding: const EdgeInsets.symmetric(
@@ -132,16 +130,13 @@ class _LihatProdukPageState extends State<LihatProdukPage> {
                                 return GestureDetector(
                                   onTap: () {
                                     setState(() {
-                                      selectedIndex =
-                                          index - 1; // Set selected index
+                                      selectedIndex = index - 1;
                                     });
                                   },
                                   child: Container(
-                                    color:
-                                        isSelected
-                                            ? Colors.yellow.shade700
-                                                .withOpacity(0.7)
-                                            : null,
+                                    color: isSelected
+                                        ? Colors.yellow.shade700.withOpacity(0.7)
+                                        : null,
                                     padding: const EdgeInsets.symmetric(
                                       vertical: 10,
                                       horizontal: 8,
@@ -168,22 +163,19 @@ class _LihatProdukPageState extends State<LihatProdukPage> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         ElevatedButton(
-                          onPressed:
-                              selectedIndex != null
-                                  ? () {
-                                    final produk = produkBox.getAt(
-                                      selectedIndex!,
-                                    );
-                                    Navigator.pushNamed(
-                                      context,
-                                      '/ubah_produk',
-                                      arguments: {
-                                        'index': selectedIndex,
-                                        'produk': produk,
-                                      },
-                                    );
-                                  }
-                                  : null,
+                          onPressed: selectedIndex != null
+                              ? () {
+                                  final produk = produkBox.getAt(selectedIndex!);
+                                  Navigator.pushNamed(
+                                    context,
+                                    '/ubah_produk',
+                                    arguments: {
+                                      'index': selectedIndex,
+                                      'produk': produk,
+                                    },
+                                  );
+                                }
+                              : null,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF225840),
                             padding: const EdgeInsets.symmetric(
@@ -202,9 +194,7 @@ class _LihatProdukPageState extends State<LihatProdukPage> {
                         const SizedBox(width: 16),
                         ElevatedButton(
                           onPressed:
-                              selectedIndex != null
-                                  ? () => hapusProduk(selectedIndex!)
-                                  : null,
+                              selectedIndex != null ? () => hapusProduk(selectedIndex!) : null,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF225840),
                             padding: const EdgeInsets.symmetric(
@@ -233,14 +223,13 @@ class _LihatProdukPageState extends State<LihatProdukPage> {
   }
 }
 
-// Komponen header kolom tabel
 class _HeaderCell extends StatelessWidget {
   final String label;
   const _HeaderCell(this.label);
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       width: 150,
       child: Text(
         label,
@@ -254,14 +243,13 @@ class _HeaderCell extends StatelessWidget {
   }
 }
 
-// Komponen isi data tabel
 class _DataCell extends StatelessWidget {
   final String value;
   const _DataCell(this.value);
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       width: 150,
       child: Text(value, overflow: TextOverflow.ellipsis),
     );
