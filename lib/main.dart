@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart'; 
+import 'package:hive/hive.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
@@ -9,14 +9,13 @@ import 'package:eatoscan/produk_model.dart';
 import 'package:eatoscan/setting.dart';
 import 'package:eatoscan/splash.dart';
 import 'package:eatoscan/user_model.dart';
-import 'package:hive_flutter/adapters.dart';
-
-import 'signup_screen.dart';
-import 'login_admin.dart';
-import 'login_screen.dart';
-import 'landing_page.dart';
-import 'crud_produk.dart';
-// import halaman lain jika sudah ada: scan_screen.dart, informasi_screen.dart, rekomendasi_screen.dart, profil_screen.dart
+import 'package:eatoscan/lihat_produk.dart'; // Tambahkan impor
+import 'package:eatoscan/edit_produk.dart'; // Tambahkan impor
+import 'package:eatoscan/signup_screen.dart';
+import 'package:eatoscan/login_admin.dart';
+import 'package:eatoscan/login_screen.dart';
+import 'package:eatoscan/landing_page.dart';
+import 'package:eatoscan/crud_produk.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,7 +27,7 @@ void main() async {
     await Hive.openBox('eatoscanBox');
     await Hive.openBox<UserModel>('users');
     await Hive.openBox<ProdukModel>('produk');
-    await Hive.openBox('user');
+    // Hapus 'user' jika tidak digunakan, atau jelaskan penggunaannya
   } else {
     // Mobile (Android/iOS)
     final appDocumentDir = await getApplicationDocumentsDirectory();
@@ -40,7 +39,7 @@ void main() async {
     await Hive.openBox('eatoscanBox');
     await Hive.openBox<UserModel>('users');
     await Hive.openBox<ProdukModel>('produk');
-    await Hive.openBox('user');
+    // Hapus 'user' jika tidak digunakan
   }
   runApp(const MyApp());
 }
@@ -67,13 +66,30 @@ class MyApp extends StatelessWidget {
         '/crudAdmin': (context) => const CrudProduk(),
         '/setting': (context) => SettingPage(),
         '/dashboard': (context) => DashboardAdmin(),
+        '/lihat_produk':
+            (context) => const LihatProdukPage(), // Tambahkan rute ini
+        '/edit_produk': (context) {
+          // Tangani argumen untuk EditProdukPage
+          final args =
+              ModalRoute.of(context)!.settings.arguments
+                  as Map<String, dynamic>?;
+          if (args == null) {
+            throw ArgumentError('Argumen tidak ditemukan untuk /edit_produk');
+          }
+          final index = args['index'] as int;
+          final produk = args['produk'] as ProdukModel;
+          return EditProdukPage(index: index, produk: produk);
+        },
+        // Rute lain bisa ditambahkan di sini jika sudah ada
         // '/scan': (context) => ScanScreen(),
         // '/info': (context) => InformasiScreen(),
         // '/rekom': (context) => RekomendasiScreen(),
-        
       },
-      // Gunakan onGenerateRoute untuk meng-handle route yang butuh arguments
-      onGenerateRoute: (settings) => null,
+      // onGenerateRoute sebagai cadangan (opsional)
+      onGenerateRoute: (settings) {
+        // Handle rute dinamis jika diperlukan
+        return null;
+      },
     );
   }
 }

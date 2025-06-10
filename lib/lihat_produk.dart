@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
+import 'package:eatoscan/edit_produk.dart';
 import 'produk_model.dart';
 
 class LihatProdukPage extends StatefulWidget {
-  const LihatProdukPage({Key? key}) : super(key: key);
+  const LihatProdukPage({super.key});
 
   @override
   State<LihatProdukPage> createState() => _LihatProdukPageState();
@@ -22,27 +23,63 @@ class _LihatProdukPageState extends State<LihatProdukPage> {
   void hapusProduk(int index) {
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Konfirmasi'),
-        content: const Text('Yakin ingin menghapus produk ini?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Batal'),
+      builder:
+          (BuildContext dialogContext) => AlertDialog(
+            title: const Text('Konfirmasi'),
+            content: const Text('Yakin ingin menghapus produk ini?'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(dialogContext).pop();
+                },
+                child: const Text('Batal'),
+              ),
+              TextButton(
+                onPressed: () {
+                  try {
+                    produkBox.deleteAt(index);
+                    setState(() {
+                      selectedIndex = null;
+                    });
+                    Navigator.of(dialogContext).pop();
+                  } catch (e) {
+                    Navigator.of(dialogContext).pop();
+                  }
+                },
+                child: const Text('Hapus'),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () {
-              produkBox.deleteAt(index);
-              setState(() {
-                selectedIndex = null;
-              });
-              Navigator.of(context).pop();
-            },
-            child: const Text('Hapus'),
-          ),
-        ],
-      ),
-    );
+    ).then((value) {
+      if (mounted) {
+        if (produkBox.values.length < produkBox.length ||
+            selectedIndex == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Berhasil: Produk berhasil dihapus.'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        } else if (selectedIndex != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Penghapusan dibatalkan.'),
+              backgroundColor: Colors.blue,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Gagal: Terjadi kesalahan saat menghapus produk.'),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+      }
+    });
   }
 
   @override
@@ -134,9 +171,11 @@ class _LihatProdukPageState extends State<LihatProdukPage> {
                                     });
                                   },
                                   child: Container(
-                                    color: isSelected
-                                        ? Colors.yellow.shade700.withOpacity(0.7)
-                                        : null,
+                                    color:
+                                        isSelected
+                                            ? Colors.yellow.shade700
+                                                .withOpacity(0.7)
+                                            : null,
                                     padding: const EdgeInsets.symmetric(
                                       vertical: 10,
                                       horizontal: 8,
@@ -163,19 +202,41 @@ class _LihatProdukPageState extends State<LihatProdukPage> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         ElevatedButton(
-                          onPressed: selectedIndex != null
-                              ? () {
-                                  final produk = produkBox.getAt(selectedIndex!);
-                                  Navigator.pushNamed(
-                                    context,
-                                    '/ubah_produk',
-                                    arguments: {
-                                      'index': selectedIndex,
-                                      'produk': produk,
-                                    },
-                                  );
-                                }
-                              : null,
+                          onPressed:
+                              selectedIndex != null
+                                  ? () {
+                                    final produk = produkBox.getAt(
+                                      selectedIndex!,
+                                    );
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder:
+                                            (context) => EditProdukPage(
+                                              index: selectedIndex!,
+                                              produk: produk!,
+                                            ),
+                                      ),
+                                    ).then((result) {
+                                      if (result == true && mounted) {
+                                        setState(
+                                          () {},
+                                        ); // Refresh the list after editing
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                              'Berhasil: Produk berhasil diubah.',
+                                            ),
+                                            backgroundColor: Colors.green,
+                                            duration: Duration(seconds: 3),
+                                          ),
+                                        );
+                                      }
+                                    });
+                                  }
+                                  : null,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF225840),
                             padding: const EdgeInsets.symmetric(
@@ -194,7 +255,9 @@ class _LihatProdukPageState extends State<LihatProdukPage> {
                         const SizedBox(width: 16),
                         ElevatedButton(
                           onPressed:
-                              selectedIndex != null ? () => hapusProduk(selectedIndex!) : null,
+                              selectedIndex != null
+                                  ? () => hapusProduk(selectedIndex!)
+                                  : null,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF225840),
                             padding: const EdgeInsets.symmetric(

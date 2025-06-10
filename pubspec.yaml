@@ -63,7 +63,7 @@ dev_dependencies:
   lints : ^5.1.1
   source_gen : ^1.5.0
   test_api : ^0.7.4
-  vm_service : ^14.3.1
+  vm_service : ^15.0.0
   flutter_test:
     sdk: flutter
 

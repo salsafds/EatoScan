@@ -43,9 +43,15 @@ class _ProductFormPageState extends State<ProductFormPage> {
   void dispose() {
     _namaController.dispose();
     _kodeController.dispose();
-    for (var c in _nutrisiNamaControllers) c.dispose();
-    for (var c in _nutrisiBeratControllers) c.dispose();
-    for (var c in _risikoControllers) c.dispose();
+    for (var c in _nutrisiNamaControllers) {
+      c.dispose();
+    }
+    for (var c in _nutrisiBeratControllers) {
+      c.dispose();
+    }
+    for (var c in _risikoControllers) {
+      c.dispose();
+    }
     super.dispose();
   }
 
@@ -103,9 +109,15 @@ class _ProductFormPageState extends State<ProductFormPage> {
       // Clear input fields
       _namaController.clear();
       _kodeController.clear();
-      for (var c in _nutrisiNamaControllers) c.clear();
-      for (var c in _nutrisiBeratControllers) c.clear();
-      for (var c in _risikoControllers) c.clear();
+      for (var c in _nutrisiNamaControllers) {
+        c.clear();
+      }
+      for (var c in _nutrisiBeratControllers) {
+        c.clear();
+      }
+      for (var c in _risikoControllers) {
+        c.clear();
+      }
       _selectedKategori = null;
 
       setState(() {});
