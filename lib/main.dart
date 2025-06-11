@@ -16,6 +16,7 @@ import 'package:eatoscan/login_admin.dart';
 import 'package:eatoscan/login_screen.dart';
 import 'package:eatoscan/landing_page.dart';
 import 'package:eatoscan/crud_produk.dart';
+import 'package:eatoscan/crud_penyakit.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
