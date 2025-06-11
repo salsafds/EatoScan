@@ -110,12 +110,34 @@ class _ProductFormPageState extends State<ProductFormPage> {
       nutrisiList.add('$nama ($berat g)');
     }
 
+    // Validasi dropdown kategori
+    if (_selectedKategori == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Gagal: Kategori produk harus dipilih.'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
+
     // Collect risiko list
-    final risikoList =
-        _risikoControllers
-            .map((e) => e.text.trim())
-            .where((e) => e.isNotEmpty)
-            .toList();
+    final risikoList = <String>[];
+    for (var controller in _risikoControllers) {
+      final text = controller.text.trim();
+      if (text.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Gagal: Semua potensi risiko harus diisi.'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 3),
+          ),
+        );
+        return;
+      }
+      risikoList.add(text);
+    }
 
     try {
       // Create and save the product
