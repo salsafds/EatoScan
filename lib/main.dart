@@ -16,6 +16,7 @@ import 'login_admin.dart';
 import 'login_screen.dart';
 import 'landing_page.dart';
 import 'crud_produk.dart';
+import 'crud_penyakit.dart';
 // import halaman lain jika sudah ada: scan_screen.dart, informasi_screen.dart, rekomendasi_screen.dart, profil_screen.dart
 
 void main() async {
@@ -67,6 +68,7 @@ class MyApp extends StatelessWidget {
         '/crudAdmin': (context) => const CrudProduk(),
         '/setting': (context) => SettingPage(),
         '/dashboard': (context) => DashboardAdmin(),
+        '/crudPenyakit': (context) => CrudPenyakitPage(),
         // '/scan': (context) => ScanScreen(),
         // '/info': (context) => InformasiScreen(),
         // '/rekom': (context) => RekomendasiScreen(),
