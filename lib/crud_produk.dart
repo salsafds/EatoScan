@@ -212,7 +212,6 @@ class _ProductFormPageState extends State<ProductFormPage> {
                     child: IconButton(
                       icon: const Icon(Icons.arrow_back, color: Colors.white),
                       onPressed: () {
-                        print("Back button ditekan");
                         _resetForm();
                         Navigator.of(
                           context,

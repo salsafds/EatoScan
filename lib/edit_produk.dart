@@ -151,8 +151,11 @@ class _EditProdukPageState extends State<EditProdukPage> {
               ),
               TextButton(
                 onPressed: () {
-                  Navigator.pop(context);
-                  Navigator.pop(context);
+                  Navigator.pop(context); // Tutup dialog
+                  Navigator.pushReplacementNamed(
+                    context,
+                    '/lihat_produk',
+                  ); // Ganti halaman edit ke lihat produk
                 },
                 child: const Text('Ya, Batalkan'),
               ),

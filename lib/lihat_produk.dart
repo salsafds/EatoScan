@@ -100,7 +100,9 @@ class _LihatProdukPageState extends State<LihatProdukPage> {
                     alignment: Alignment.centerLeft,
                     child: IconButton(
                       icon: const Icon(Icons.arrow_back, color: Colors.white),
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: () {
+                        Navigator.pushReplacementNamed(context, '/crudAdmin');
+                      },
                     ),
                   ),
                   const Center(
