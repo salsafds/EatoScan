@@ -1,6 +1,4 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 
 class EditProfilPage extends StatefulWidget {
   const EditProfilPage({super.key});
@@ -15,21 +13,7 @@ class _EditProfilPageState extends State<EditProfilPage> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController kataSandiLamaController = TextEditingController();
   final TextEditingController kataSandiBaruController = TextEditingController();
-  final TextEditingController konfirmasiSandiController =
-      TextEditingController();
-
-  File? _image;
-
-  Future<void> _pickImage() async {
-    final pickedFile = await ImagePicker().pickImage(
-      source: ImageSource.gallery,
-    );
-    if (pickedFile != null) {
-      setState(() {
-        _image = File(pickedFile.path);
-      });
-    }
-  }
+  final TextEditingController konfirmasiSandiController = TextEditingController();
 
   InputDecoration inputStyle(String label) {
     return InputDecoration(
@@ -48,7 +32,7 @@ class _EditProfilPageState extends State<EditProfilPage> {
     );
   }
 
-  void _simpanPerubahan() {
+  Future<void> _simpanPerubahan() async {
     if (namaController.text.isEmpty ||
         teleponController.text.isEmpty ||
         emailController.text.isEmpty) {
@@ -65,9 +49,7 @@ class _EditProfilPageState extends State<EditProfilPage> {
       return;
     }
 
-    // Logika penyimpanan bisa ditambahkan di sini
-
-    Navigator.pop(context, _image?.path); // kirim path ke halaman sebelumnya
+    Navigator.pop(context);
   }
 
   @override
@@ -79,7 +61,7 @@ class _EditProfilPageState extends State<EditProfilPage> {
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context, _image?.path),
+          onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           'Edit Profil',
@@ -102,24 +84,9 @@ class _EditProfilPageState extends State<EditProfilPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Center(
-                        child: Stack(
-                          alignment: Alignment.bottomRight,
-                          children: [
-                            CircleAvatar(
-                              radius: 60,
-                              backgroundImage:
-                                  _image != null
-                                      ? FileImage(_image!)
-                                      : AssetImage(
-                                            'assets/images/eatoscan2.png',
-                                          )
-                                          as ImageProvider,
-                            ),
-                            IconButton(
-                              icon: Icon(Icons.camera_alt, color: Colors.black),
-                              onPressed: _pickImage,
-                            ),
-                          ],
+                        child: CircleAvatar(
+                          radius: 60,
+                          backgroundImage: AssetImage('assets/images/default_profil.jpg'),
                         ),
                       ),
                       SizedBox(height: 24),
@@ -133,7 +100,7 @@ class _EditProfilPageState extends State<EditProfilPage> {
                       SizedBox(height: 16),
                       TextFormField(
                         controller: namaController,
-                        decoration: inputStyle('Nama'),
+                        decoration: inputStyle('Username'),
                       ),
                       SizedBox(height: 16),
                       TextFormField(
