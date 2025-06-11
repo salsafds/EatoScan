@@ -49,6 +49,7 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
+  vm_service: 14.3.1
 
 dev_dependencies:
   hive_generator: ^2.0.1
@@ -63,7 +64,6 @@ dev_dependencies:
   lints : ^5.1.1
   source_gen : ^1.5.0
   test_api : ^0.7.4
-  vm_service : ^15.0.0
   flutter_test:
     sdk: flutter
 

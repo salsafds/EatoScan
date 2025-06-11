@@ -1,6 +1,5 @@
 import 'package:eatoscan/produk_model.dart';
 import 'package:flutter/material.dart';
-// import 'package:eatoscan/db_helper.dart';
 import 'package:eatoscan/lihat_produk.dart';
 import 'package:hive/hive.dart';
 
@@ -38,6 +37,31 @@ class _ProductFormPageState extends State<ProductFormPage> {
     TextEditingController(),
   ];
   String? _selectedKategori;
+
+  // Fungsi untuk reset semua input form
+  void _resetForm() {
+    _namaController.clear();
+    _kodeController.clear();
+    for (var controller in _nutrisiNamaControllers) {
+      controller.clear();
+    }
+    for (var controller in _nutrisiBeratControllers) {
+      controller.clear();
+    }
+    for (var controller in _risikoControllers) {
+      controller.clear();
+    }
+    setState(() {
+      _selectedKategori = null;
+      // Reset daftar nutrisi dan risiko ke 1 baris saja
+      _nutrisiNamaControllers.clear();
+      _nutrisiBeratControllers.clear();
+      _risikoControllers.clear();
+      _nutrisiNamaControllers.add(TextEditingController());
+      _nutrisiBeratControllers.add(TextEditingController());
+      _risikoControllers.add(TextEditingController());
+    });
+  }
 
   @override
   void dispose() {
@@ -164,10 +188,15 @@ class _ProductFormPageState extends State<ProductFormPage> {
                   Align(
                     alignment: Alignment.centerLeft,
                     child: IconButton(
-                      onPressed: () {
-                        Navigator.pushReplacementNamed(context, '/dashboard');
-                      },
                       icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      onPressed: () {
+                        print("Back button ditekan");
+                        _resetForm();
+                        Navigator.of(
+                          context,
+                          rootNavigator: true,
+                        ).pushNamed('/dashboard');
+                      },
                     ),
                   ),
                   const Center(
