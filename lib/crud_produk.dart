@@ -1,6 +1,5 @@
 import 'package:eatoscan/produk_model.dart';
 import 'package:flutter/material.dart';
-// import 'package:eatoscan/db_helper.dart';
 import 'package:eatoscan/lihat_produk.dart';
 import 'package:hive/hive.dart';
 
@@ -39,13 +38,44 @@ class _ProductFormPageState extends State<ProductFormPage> {
   ];
   String? _selectedKategori;
 
+  // Fungsi untuk reset semua input form
+  void _resetForm() {
+    _namaController.clear();
+    _kodeController.clear();
+    for (var controller in _nutrisiNamaControllers) {
+      controller.clear();
+    }
+    for (var controller in _nutrisiBeratControllers) {
+      controller.clear();
+    }
+    for (var controller in _risikoControllers) {
+      controller.clear();
+    }
+    setState(() {
+      _selectedKategori = null;
+      // Reset daftar nutrisi dan risiko ke 1 baris saja
+      _nutrisiNamaControllers.clear();
+      _nutrisiBeratControllers.clear();
+      _risikoControllers.clear();
+      _nutrisiNamaControllers.add(TextEditingController());
+      _nutrisiBeratControllers.add(TextEditingController());
+      _risikoControllers.add(TextEditingController());
+    });
+  }
+
   @override
   void dispose() {
     _namaController.dispose();
     _kodeController.dispose();
-    for (var c in _nutrisiNamaControllers) c.dispose();
-    for (var c in _nutrisiBeratControllers) c.dispose();
-    for (var c in _risikoControllers) c.dispose();
+    for (var c in _nutrisiNamaControllers) {
+      c.dispose();
+    }
+    for (var c in _nutrisiBeratControllers) {
+      c.dispose();
+    }
+    for (var c in _risikoControllers) {
+      c.dispose();
+    }
     super.dispose();
   }
 
@@ -80,12 +110,34 @@ class _ProductFormPageState extends State<ProductFormPage> {
       nutrisiList.add('$nama ($berat g)');
     }
 
+    // Validasi dropdown kategori
+    if (_selectedKategori == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Gagal: Kategori produk harus dipilih.'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
+
     // Collect risiko list
-    final risikoList =
-        _risikoControllers
-            .map((e) => e.text.trim())
-            .where((e) => e.isNotEmpty)
-            .toList();
+    final risikoList = <String>[];
+    for (var controller in _risikoControllers) {
+      final text = controller.text.trim();
+      if (text.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Gagal: Semua potensi risiko harus diisi.'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 3),
+          ),
+        );
+        return;
+      }
+      risikoList.add(text);
+    }
 
     try {
       // Create and save the product
@@ -103,9 +155,15 @@ class _ProductFormPageState extends State<ProductFormPage> {
       // Clear input fields
       _namaController.clear();
       _kodeController.clear();
-      for (var c in _nutrisiNamaControllers) c.clear();
-      for (var c in _nutrisiBeratControllers) c.clear();
-      for (var c in _risikoControllers) c.clear();
+      for (var c in _nutrisiNamaControllers) {
+        c.clear();
+      }
+      for (var c in _nutrisiBeratControllers) {
+        c.clear();
+      }
+      for (var c in _risikoControllers) {
+        c.clear();
+      }
       _selectedKategori = null;
 
       setState(() {});
@@ -152,10 +210,15 @@ class _ProductFormPageState extends State<ProductFormPage> {
                   Align(
                     alignment: Alignment.centerLeft,
                     child: IconButton(
-                      onPressed: () {
-                        Navigator.pushReplacementNamed(context, '/dashboard');
-                      },
                       icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      onPressed: () {
+                        print("Back button ditekan");
+                        _resetForm();
+                        Navigator.of(
+                          context,
+                          rootNavigator: true,
+                        ).pushNamed('/dashboard');
+                      },
                     ),
                   ),
                   const Center(

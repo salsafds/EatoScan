@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 class EditProfilPage extends StatefulWidget {
+  const EditProfilPage({super.key});
+
   @override
   _EditProfilPageState createState() => _EditProfilPageState();
 }
@@ -13,12 +15,15 @@ class _EditProfilPageState extends State<EditProfilPage> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController kataSandiLamaController = TextEditingController();
   final TextEditingController kataSandiBaruController = TextEditingController();
-  final TextEditingController konfirmasiSandiController = TextEditingController();
+  final TextEditingController konfirmasiSandiController =
+      TextEditingController();
 
   File? _image;
 
   Future<void> _pickImage() async {
-    final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
+    final pickedFile = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+    );
     if (pickedFile != null) {
       setState(() {
         _image = File(pickedFile.path);
@@ -31,9 +36,7 @@ class _EditProfilPageState extends State<EditProfilPage> {
       labelText: label,
       filled: true,
       fillColor: Colors.white,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(color: Colors.grey.shade300),
@@ -104,9 +107,13 @@ class _EditProfilPageState extends State<EditProfilPage> {
                           children: [
                             CircleAvatar(
                               radius: 60,
-                              backgroundImage: _image != null
-                                  ? FileImage(_image!)
-                                  : AssetImage('assets/images/eatoscan2.png') as ImageProvider,
+                              backgroundImage:
+                                  _image != null
+                                      ? FileImage(_image!)
+                                      : AssetImage(
+                                            'assets/images/eatoscan2.png',
+                                          )
+                                          as ImageProvider,
                             ),
                             IconButton(
                               icon: Icon(Icons.camera_alt, color: Colors.black),
@@ -118,7 +125,10 @@ class _EditProfilPageState extends State<EditProfilPage> {
                       SizedBox(height: 24),
                       Text(
                         'Data Pengguna',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       SizedBox(height: 16),
                       TextFormField(
@@ -140,7 +150,10 @@ class _EditProfilPageState extends State<EditProfilPage> {
                       SizedBox(height: 32),
                       Text(
                         'Ganti Kata Sandi',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       SizedBox(height: 16),
                       TextFormField(
