@@ -66,7 +66,7 @@ class MyApp extends StatelessWidget {
         '/landingPage': (context) => LandingPage(),
         '/crudAdmin': (context) => const CrudProduk(),
         '/setting': (context) => SettingPage(),
-        '/crudPenyakit': (context) => CrudPenyakitPage(),
+        '/crudPenyakit': (context) => CrudPenyakit(),
         '/dashboard': (context) => const DashboardAdmin(),
         '/lihat_produk':
             (context) => const LihatProdukPage(), // Tambahkan rute ini
