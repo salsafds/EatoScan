@@ -1,12 +1,11 @@
-// import 'dart:ui';
-
-// import 'package:flutter/foundation.dart';
+import 'dart:io';
 import 'package:flutter/material.dart';
-// import 'package:hive/hive.dart';
+import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'produk_model.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-
+import 'package:image_picker/image_picker.dart';
+import 'produk_model.dart';
+import 'package:eatoscan/product_detail_screen.dart';
 
 class LandingPage extends StatefulWidget {
   const LandingPage({super.key});
@@ -21,92 +20,56 @@ class _LandingPageState extends State<LandingPage> {
   bool isScanning = false;
   late bool isLoggedIn;
   late String username;
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
     super.initState();
     _produkBox = Hive.box<ProdukModel>('produk');
     _userBox = Hive.box('eatoscanBox');
-    // isLoggedIn = _userBox.get('isLoggedIn', defaultValue: false);
-    // username = _userBox.get('loggedInUser', defaultValue: 'User');
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final List<ProdukModel> produkList = _produkBox.values.toList();
-
-    return Scaffold(
-      backgroundColor: const Color(0xFF1E4D2B),
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildHeader(context),
-            _buildScannerSection(),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Rekomendasi Produk!',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            _buildProdukList(produkList),
-          ],
-        ),
-      ),
-    );
   }
 
   Widget _buildHeader(BuildContext context) {
-  return ValueListenableBuilder(
-    valueListenable: _userBox.listenable(),
-    builder: (context, box, _) {
-      final isLoggedIn = box.get('isLoggedIn', defaultValue: false);
-      final username = box.get('loggedInUser', defaultValue: 'User');
-
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            // Kiri
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'EatoScan',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
+    return ValueListenableBuilder(
+      valueListenable: _userBox.listenable(),
+      builder: (context, box, _) {
+        final isLoggedIn = box.get('isLoggedIn', defaultValue: false);
+        final username = box.get('loggedInUser', defaultValue: 'User');
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'EatoScan',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Selamat datang, ${isLoggedIn ? username : 'User'}!',
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
+                  const SizedBox(height: 4),
+                  Text(
+                    'Selamat datang, ${isLoggedIn ? username : 'User'}!',
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
-              ],
-            ),
-
-            // Kanan
-            isLoggedIn
-                ? IconButton(
+                ],
+              ),
+              isLoggedIn
+                  ? IconButton(
                     icon: const Icon(Icons.settings, color: Colors.white),
-                    onPressed: () => Navigator.pushReplacementNamed(context, '/setting'),
+                    onPressed:
+                        () =>
+                            Navigator.pushReplacementNamed(context, '/setting'),
                   )
-                : Container(
+                  : Container(
                     width: 95,
                     height: 42,
                     decoration: BoxDecoration(
@@ -114,66 +77,24 @@ class _LandingPageState extends State<LandingPage> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: TextButton(
-                      onPressed: () => Navigator.pushReplacementNamed(context, '/login'),
+                      onPressed:
+                          () =>
+                              Navigator.pushReplacementNamed(context, '/login'),
                       child: const Text(
                         "Masuk",
-                        style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
-          ],
-        ),
-      );
-    },
-  );
-}
-//   Widget _buildScannerSection() {
-//   final scanner = _buildCameraScanner(); // Scanner yang ingin ditampilkan
-
-//   if (kIsWeb) {
-//     return Stack(
-//       alignment: Alignment.center,
-//       children: [
-//         // Scanner ditampilkan seperti biasa
-//         scanner,
-
-//         // Efek blur di atas scanner
-//         Positioned.fill(
-//           child: ClipRRect(
-//             borderRadius: BorderRadius.circular(28),
-//             child: BackdropFilter(
-//               filter: ImageFilter.blur(sigmaX: 6.0, sigmaY: 6.0),
-//               child: Container(
-//                 color: Colors.black.withOpacity(0.3), // Lapisan semi-transparan
-//               ),
-//             ),
-//           ),
-//         ),
-
-//         // Teks peringatan
-//         const Positioned(
-//           top: 20,
-//           left: 20,
-//           right: 20,
-//           child: Text(
-//             "Scan kamera hanya tersedia di versi Android/iOS.",
-//             textAlign: TextAlign.center,
-//             style: TextStyle(
-//               fontSize: 16,
-//               color: Colors.white,
-//               fontWeight: FontWeight.bold,
-//               shadows: [
-//                 Shadow(blurRadius: 4, color: Colors.black45, offset: Offset(1, 1))
-//               ],
-//             ),
-//           ),
-//         ),
-//       ],
-//     );
-//   } else {
-//     return scanner;
-//   }
-// }
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   Widget _buildScannerSection() {
     return Padding(
@@ -183,61 +104,62 @@ class _LandingPageState extends State<LandingPage> {
   }
 
   Widget _buildCameraScanner() {
-  return SizedBox(
-    width: 300,
-    height: 300,
-    child: ClipRRect(
-      borderRadius: BorderRadius.circular(28),
-      child: MobileScanner(
-        controller: MobileScannerController(
-          // detectionSpeed: DetectionSpeed.normal,
-          // facing: CameraFacing.back,
-          // torchEnabled: false,
-        ),
-        onDetect: (BarcodeCapture capture) async {
-          final List<Barcode> barcodes = capture.barcodes;
-          for (final barcode in barcodes) {
-            final String? code = barcode.rawValue;
-            if (code != null) {
-              debugPrint('Barcode ditemukan: $code');
-              // Mencari produk berdasarkan kode (barcode)
-              final matchedProduct = _produkBox.values.firstWhere(
-                (produk) => produk.kode == code,
-                orElse: () => ProdukModel(
-                  nama: 'Tidak ditemukan',
-                  kode: '',
-                  nutrisi: '',
-                  tambahan: '',
-                  risiko: '',
-                ),
-              );
-
-              // Menampilkan popup hasil
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: Text('Hasil Scan'),
-                  content: Text(
-                    matchedProduct.nama == 'Tidak ditemukan'
-                        ? 'Produk tidak ditemukan dalam database.'
-                        : 'Produk: ${matchedProduct.nama}\nRisiko: ${matchedProduct.risiko}',
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('Tutup'),
-                    ),
-                  ],
-                ),
-              );
+    return SizedBox(
+      width: 300,
+      height: 300,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(28),
+        child: MobileScanner(
+          controller: MobileScannerController(
+            detectionSpeed:
+                DetectionSpeed.noDuplicates, // Otomatis deteksi tanpa duplikat
+            facing: CameraFacing.back,
+            torchEnabled: false,
+            autoStart: true, // Mulai otomatis
+          ),
+          onDetect: (BarcodeCapture capture) async {
+            if (!isScanning) {
+              setState(() => isScanning = true);
+              final List<Barcode> barcodes = capture.barcodes;
+              for (final barcode in barcodes) {
+                final String? code = barcode.rawValue;
+                if (code != null) {
+                  debugPrint('Barcode ditemukan: $code');
+                  final XFile? photo = await _picker.pickImage(
+                    source: ImageSource.camera,
+                  );
+                  if (photo != null) {
+                    final matchedProduct = _produkBox.values.firstWhere(
+                      (produk) => produk.kode == code,
+                      orElse:
+                          () => ProdukModel(
+                            nama: 'Tidak ditemukan',
+                            kode: '',
+                            nutrisi: '',
+                            tambahan: '',
+                            risiko: '',
+                          ),
+                    );
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder:
+                            (context) => ProductDetailScreen(
+                              product: matchedProduct,
+                              imagePath: photo.path,
+                            ),
+                      ),
+                    );
+                  }
+                }
+              }
+              setState(() => isScanning = false);
             }
-          }
-        },
+          },
+        ),
       ),
-    ),
-  );
-}
-
+    );
+  }
 
   Widget _buildProdukList(List<ProdukModel> produkList) {
     if (produkList.isEmpty) {
@@ -250,7 +172,6 @@ class _LandingPageState extends State<LandingPage> {
         ),
       );
     }
-
     return Expanded(
       child: ListView.builder(
         padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -268,9 +189,7 @@ class _LandingPageState extends State<LandingPage> {
             child: Row(
               children: [
                 Image.asset(
-                  produk.gambarPath?.isNotEmpty == true
-                      ? produk.gambarPath!
-                      : "assets/images/eatoscan.png",
+                  "assets/images/eatoscan.png",
                   width: 60,
                   height: 60,
                 ),
@@ -305,7 +224,10 @@ class _LandingPageState extends State<LandingPage> {
                       ),
                       const SizedBox(height: 6),
                       Container(
-                        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 4,
+                          horizontal: 8,
+                        ),
                         decoration: BoxDecoration(
                           color: warnaTag.withOpacity(0.15),
                           borderRadius: BorderRadius.circular(8),
@@ -320,7 +242,9 @@ class _LandingPageState extends State<LandingPage> {
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              produk.risiko.isNotEmpty ? produk.risiko : "Tidak diketahui",
+                              produk.risiko.isNotEmpty
+                                  ? produk.risiko
+                                  : "Tidak diketahui",
                               style: TextStyle(
                                 fontSize: 11,
                                 color: warnaTag,
@@ -337,6 +261,38 @@ class _LandingPageState extends State<LandingPage> {
             ),
           );
         },
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final List<ProdukModel> produkList = _produkBox.values.toList();
+    return Scaffold(
+      backgroundColor: const Color(0xFF1E4D2B),
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildHeader(context),
+            _buildScannerSection(),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Rekomendasi Produk!',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            _buildProdukList(produkList),
+          ],
+        ),
       ),
     );
   }
