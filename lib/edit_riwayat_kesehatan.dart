@@ -1,38 +1,124 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'crud_penyakit.dart';
 
 class EditRiwayatKesehatanPage extends StatefulWidget {
   const EditRiwayatKesehatanPage({super.key});
 
   @override
-  State<EditRiwayatKesehatanPage> createState() => _EditRiwayatKesehatanPageState();
+  State<EditRiwayatKesehatanPage> createState() =>
+      _EditRiwayatKesehatanPageState();
 }
 
 class _EditRiwayatKesehatanPageState extends State<EditRiwayatKesehatanPage> {
   String? _gender;
-  bool _diabetes = false;
-  bool _obesitas = false;
-  bool _jantung = false;
+  Map<String, bool> _penyakitStatus = {};
+  String? _savedGender;
+  Map<String, bool> _savedPenyakitStatus = {};
+  bool _hasChanges = false;
+  bool _isLoading = true;
 
-  void _simpanData() {
-    // Logika simpan data bisa ditambahkan di sini
-    // Misalnya kirim ke database, API, dll.
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Berhasil"),
-        content: const Text("Data riwayat kesehatan telah disimpan."),
-        actions: [
-          TextButton(
-            child: const Text("OK"),
-            onPressed: () => Navigator.of(context).pop(),
-          )
-        ],
-      ),
-    );
+  @override
+  void initState() {
+    super.initState();
+    // Inisialisasi status checkbox
+    _initializePenyakitStatus();
+    // Muat data tersimpan
+    _loadSavedData();
+  }
+
+  // Inisialisasi status penyakit
+  void _initializePenyakitStatus() {
+    for (var penyakit in PenyakitFormPage.dataPenyakit) {
+      _penyakitStatus[penyakit['nama']] = false;
+      _savedPenyakitStatus[penyakit['nama']] = false;
+    }
+  }
+
+  // Memuat data dari SharedPreferences
+  Future<void> _loadSavedData() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      setState(() {
+        _gender = prefs.getString('gender');
+        _savedGender = _gender;
+        for (var penyakit in PenyakitFormPage.dataPenyakit) {
+          final nama = penyakit['nama'];
+          _penyakitStatus[nama] = prefs.getBool('penyakit_$nama') ?? false;
+          _savedPenyakitStatus[nama] = _penyakitStatus[nama]!;
+        }
+        _hasChanges = false;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal memuat data: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  // Menyimpan data ke SharedPreferences
+  Future<void> _simpanData() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('gender', _gender ?? '');
+      for (var penyakit in PenyakitFormPage.dataPenyakit) {
+        final nama = penyakit['nama'];
+        await prefs.setBool('penyakit_$nama', _penyakitStatus[nama] ?? false);
+      }
+      setState(() {
+        _savedGender = _gender;
+        _savedPenyakitStatus = Map.from(_penyakitStatus);
+        _hasChanges = false;
+      });
+      showDialog(
+        context: context,
+        builder:
+            (context) => AlertDialog(
+              title: const Text("Berhasil"),
+              content: const Text("Data riwayat kesehatan telah disimpan."),
+              actions: [
+                TextButton(
+                  child: const Text("OK"),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ],
+            ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal menyimpan data: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  // Mengecek apakah ada perubahan
+  void _checkForChanges() {
+    bool hasChanges =
+        _gender != _savedGender ||
+        _penyakitStatus.entries.any(
+          (entry) => _savedPenyakitStatus[entry.key] != entry.value,
+        );
+    setState(() {
+      _hasChanges = hasChanges;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFF2F684A),
       body: SafeArea(
@@ -76,10 +162,7 @@ class _EditRiwayatKesehatanPageState extends State<EditRiwayatKesehatanPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Image.asset(
-                        'assets/images/eatoscan.png',
-                        height: 100,
-                      ),
+                      Image.asset('assets/images/eatoscan.png', height: 100),
                       const SizedBox(height: 20),
                       const Text(
                         "Riwayat Kesehatan Pengguna",
@@ -103,7 +186,10 @@ class _EditRiwayatKesehatanPageState extends State<EditRiwayatKesehatanPage> {
                               value: "Laki-laki",
                               groupValue: _gender,
                               onChanged: (value) {
-                                setState(() => _gender = value);
+                                setState(() {
+                                  _gender = value;
+                                  _checkForChanges();
+                                });
                               },
                             ),
                           ),
@@ -113,7 +199,10 @@ class _EditRiwayatKesehatanPageState extends State<EditRiwayatKesehatanPage> {
                               value: "Perempuan",
                               groupValue: _gender,
                               onChanged: (value) {
-                                setState(() => _gender = value);
+                                setState(() {
+                                  _gender = value;
+                                  _checkForChanges();
+                                });
                               },
                             ),
                           ),
@@ -124,7 +213,9 @@ class _EditRiwayatKesehatanPageState extends State<EditRiwayatKesehatanPage> {
                       // Riwayat Penyakit
                       const Align(
                         alignment: Alignment.centerLeft,
-                        child: Text("Apakah anda memiliki riwayat dibawah ini?"),
+                        child: Text(
+                          "Apakah anda memiliki riwayat dibawah ini?",
+                        ),
                       ),
                       const Align(
                         alignment: Alignment.centerLeft,
@@ -133,21 +224,30 @@ class _EditRiwayatKesehatanPageState extends State<EditRiwayatKesehatanPage> {
                           style: TextStyle(fontStyle: FontStyle.italic),
                         ),
                       ),
-                      CheckboxListTile(
-                        title: const Text("Diabetes", style: TextStyle(fontWeight: FontWeight.bold)),
-                        value: _diabetes,
-                        onChanged: (val) => setState(() => _diabetes = val!),
-                      ),
-                      CheckboxListTile(
-                        title: const Text("Obesitas", style: TextStyle(fontWeight: FontWeight.bold)),
-                        value: _obesitas,
-                        onChanged: (val) => setState(() => _obesitas = val!),
-                      ),
-                      CheckboxListTile(
-                        title: const Text("Jantung", style: TextStyle(fontWeight: FontWeight.bold)),
-                        value: _jantung,
-                        onChanged: (val) => setState(() => _jantung = val!),
-                      ),
+                      // Daftar penyakit dari CrudPenyakit
+                      if (PenyakitFormPage.dataPenyakit.isEmpty)
+                        const Text(
+                          "Belum ada data penyakit tersedia",
+                          style: TextStyle(fontSize: 12, color: Colors.grey),
+                        )
+                      else
+                        ...PenyakitFormPage.dataPenyakit.map((penyakit) {
+                          return CheckboxListTile(
+                            title: Text(
+                              penyakit['nama'],
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            value: _penyakitStatus[penyakit['nama']] ?? false,
+                            onChanged: (val) {
+                              setState(() {
+                                _penyakitStatus[penyakit['nama']] = val!;
+                                _checkForChanges();
+                              });
+                            },
+                          );
+                        }).toList(),
                       const SizedBox(height: 8),
                       const Text(
                         "nb: tidak perlu memilih jika tidak memiliki riwayat penyakit tertentu",
@@ -159,15 +259,18 @@ class _EditRiwayatKesehatanPageState extends State<EditRiwayatKesehatanPage> {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: _simpanData,
+                          onPressed: _hasChanges ? _simpanData : null,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFFE85D04),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            disabledBackgroundColor: Colors.grey[400],
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
                             padding: const EdgeInsets.symmetric(vertical: 14),
                           ),
                           child: const Text(
                             "Simpan",
-                            style: TextStyle(fontSize: 16),
+                            style: TextStyle(fontSize: 16, color: Colors.white),
                           ),
                         ),
                       ),

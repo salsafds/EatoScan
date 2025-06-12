@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 class CrudPenyakit extends StatelessWidget {
   const CrudPenyakit({super.key});
@@ -17,6 +19,8 @@ class CrudPenyakit extends StatelessWidget {
 class PenyakitFormPage extends StatefulWidget {
   const PenyakitFormPage({super.key});
 
+  static List<Map<String, dynamic>> dataPenyakit = [];
+
   @override
   State<PenyakitFormPage> createState() => _PenyakitFormPageState();
 }
@@ -25,15 +29,51 @@ class _PenyakitFormPageState extends State<PenyakitFormPage> {
   final TextEditingController _namaController = TextEditingController();
   final TextEditingController _deskripsiController = TextEditingController();
   final TextEditingController _bahanController = TextEditingController();
-  
+
   List<String> _hindariBahan = [];
-  List<Map<String, dynamic>> _dataPenyakit = [];
-  
   int? _selectedIndex;
-  
+
   @override
   void initState() {
     super.initState();
+    _loadPenyakitData();
+  }
+
+  // Memuat data penyakit dari SharedPreferences
+  Future<void> _loadPenyakitData() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String? penyakitData = prefs.getString('dataPenyakit');
+      if (penyakitData != null) {
+        final List<dynamic> decoded = jsonDecode(penyakitData);
+        setState(() {
+          PenyakitFormPage.dataPenyakit = decoded.cast<Map<String, dynamic>>();
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal memuat data penyakit: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  // Menyimpan data penyakit ke SharedPreferences
+  Future<void> _savePenyakitData() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String encoded = jsonEncode(PenyakitFormPage.dataPenyakit);
+      await prefs.setString('dataPenyakit', encoded);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal menyimpan data penyakit: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   // Fungsi untuk reset semua input form
@@ -67,7 +107,6 @@ class _PenyakitFormPageState extends State<PenyakitFormPage> {
   }
 
   void _simpan() {
-    // Validate required fields
     if (_namaController.text.isEmpty || _deskripsiController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -92,22 +131,22 @@ class _PenyakitFormPageState extends State<PenyakitFormPage> {
 
     setState(() {
       if (_selectedIndex != null) {
-        // Update existing data
-        _dataPenyakit[_selectedIndex!] = {
+        PenyakitFormPage.dataPenyakit[_selectedIndex!] = {
           'nama': _namaController.text,
           'deskripsi': _deskripsiController.text,
           'hindariBahan': List.from(_hindariBahan),
         };
       } else {
-        // Add new data
-        _dataPenyakit.add({
+        PenyakitFormPage.dataPenyakit.add({
           'nama': _namaController.text,
           'deskripsi': _deskripsiController.text,
           'hindariBahan': List.from(_hindariBahan),
         });
       }
     });
-    
+
+    _savePenyakitData();
+
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Sukses: Penyakit berhasil disimpan.'),
@@ -120,7 +159,7 @@ class _PenyakitFormPageState extends State<PenyakitFormPage> {
   void _ubah() {
     if (_selectedIndex != null) {
       setState(() {
-        final data = _dataPenyakit[_selectedIndex!];
+        final data = PenyakitFormPage.dataPenyakit[_selectedIndex!];
         _namaController.text = data['nama'];
         _deskripsiController.text = data['deskripsi'];
         _hindariBahan = List.from(data['hindariBahan']);
@@ -138,18 +177,43 @@ class _PenyakitFormPageState extends State<PenyakitFormPage> {
 
   void _hapus() {
     if (_selectedIndex != null) {
-      setState(() {
-        _dataPenyakit.removeAt(_selectedIndex!);
-        _selectedIndex = null;
-        _resetForm();
-      });
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Sukses: Data berhasil dihapus.'),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 3),
-        ),
+      showDialog(
+        context: context,
+        builder:
+            (context) => AlertDialog(
+              title: const Text('Konfirmasi Hapus'),
+              content: Text(
+                'Apakah Anda yakin ingin menghapus data penyakit "${PenyakitFormPage.dataPenyakit[_selectedIndex!]['nama']}"?',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(), // Batal
+                  child: const Text('Batal'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      PenyakitFormPage.dataPenyakit.removeAt(_selectedIndex!);
+                      _selectedIndex = null;
+                      _resetForm();
+                    });
+                    _savePenyakitData();
+                    Navigator.of(context).pop(); // Tutup dialog
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Sukses: Data berhasil dihapus.'),
+                        backgroundColor: Colors.green,
+                        duration: Duration(seconds: 3),
+                      ),
+                    );
+                  },
+                  child: const Text(
+                    'Ya, Hapus',
+                    style: TextStyle(color: Colors.red),
+                  ),
+                ),
+              ],
+            ),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -225,20 +289,20 @@ class _PenyakitFormPageState extends State<PenyakitFormPage> {
                               ),
                             ),
                             const SizedBox(height: 24),
-                            
+
                             // Nama Penyakit
                             FormFieldWithLabel(
                               label: 'Nama Penyakit',
                               controller: _namaController,
                             ),
-                            
+
                             // Deskripsi Penyakit
                             FormFieldWithLabel(
                               label: 'Deskripsi Penyakit',
                               controller: _deskripsiController,
                               maxLines: 4,
                             ),
-                            
+
                             // Hindari Bahan Section
                             const SizedBox(height: 8),
                             Row(
@@ -255,56 +319,73 @@ class _PenyakitFormPageState extends State<PenyakitFormPage> {
                                   child: Column(
                                     children: [
                                       // List of ingredients to avoid
-                                      ..._hindariBahan.asMap().entries.map((entry) {
+                                      ..._hindariBahan.asMap().entries.map((
+                                        entry,
+                                      ) {
                                         int index = entry.key;
                                         String bahan = entry.value;
                                         return Container(
-                                          margin: const EdgeInsets.only(bottom: 8),
+                                          margin: const EdgeInsets.only(
+                                            bottom: 8,
+                                          ),
                                           child: Row(
                                             children: [
                                               Expanded(
                                                 child: Container(
-                                                  padding: const EdgeInsets.symmetric(
-                                                    horizontal: 12,
-                                                    vertical: 14,
-                                                  ),
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 12,
+                                                        vertical: 14,
+                                                      ),
                                                   decoration: BoxDecoration(
-                                                    border: Border.all(color: Colors.grey),
-                                                    borderRadius: BorderRadius.circular(15),
+                                                    border: Border.all(
+                                                      color: Colors.grey,
+                                                    ),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          15,
+                                                        ),
                                                   ),
                                                   child: Text(
                                                     bahan,
-                                                    style: const TextStyle(fontSize: 12),
+                                                    style: const TextStyle(
+                                                      fontSize: 12,
+                                                    ),
                                                   ),
                                                 ),
                                               ),
                                               const SizedBox(width: 8),
                                               IconButton(
                                                 icon: const Icon(Icons.remove),
-                                                onPressed: () => _hapusBahan(index),
+                                                onPressed:
+                                                    () => _hapusBahan(index),
                                               ),
                                             ],
                                           ),
                                         );
                                       }).toList(),
-                                      
+
                                       // Add new ingredient
                                       Row(
                                         children: [
                                           Expanded(
                                             child: TextField(
                                               controller: _bahanController,
-                                              style: const TextStyle(fontSize: 12),
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                              ),
                                               decoration: InputDecoration(
                                                 hintText: 'Tambah bahan...',
                                                 border: OutlineInputBorder(
-                                                  borderRadius: BorderRadius.circular(15),
+                                                  borderRadius:
+                                                      BorderRadius.circular(15),
                                                 ),
                                                 isDense: true,
-                                                contentPadding: const EdgeInsets.symmetric(
-                                                  horizontal: 12,
-                                                  vertical: 14,
-                                                ),
+                                                contentPadding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 12,
+                                                      vertical: 14,
+                                                    ),
                                               ),
                                             ),
                                           ),
@@ -320,22 +401,38 @@ class _PenyakitFormPageState extends State<PenyakitFormPage> {
                                 ),
                               ],
                             ),
-                            
+
                             const SizedBox(height: 24),
-                            
+
                             // Action Buttons
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               children: [
-                                _buildActionButton('BARU', const Color(0xFF225840), _baru),
-                                _buildActionButton('SIMPAN', const Color(0xFF225840), _simpan),
-                                _buildActionButton('UBAH', const Color(0xFF225840), _ubah),
-                                _buildActionButton('HAPUS', const Color(0xFF225840), _hapus),
+                                _buildActionButton(
+                                  'BARU',
+                                  const Color(0xFF225840),
+                                  _baru,
+                                ),
+                                _buildActionButton(
+                                  'SIMPAN',
+                                  const Color(0xFF225840),
+                                  _simpan,
+                                ),
+                                _buildActionButton(
+                                  'UBAH',
+                                  const Color(0xFF225840),
+                                  _ubah,
+                                ),
+                                _buildActionButton(
+                                  'HAPUS',
+                                  const Color(0xFF225840),
+                                  _hapus,
+                                ),
                               ],
                             ),
-                            
+
                             const SizedBox(height: 24),
-                            
+
                             // Data Table Section
                             Container(
                               height: 300,
@@ -347,7 +444,9 @@ class _PenyakitFormPageState extends State<PenyakitFormPage> {
                                 children: [
                                   // Table Header
                                   Container(
-                                    padding: const EdgeInsets.symmetric(vertical: 12),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 12,
+                                    ),
                                     decoration: BoxDecoration(
                                       color: Colors.grey[100],
                                       borderRadius: const BorderRadius.only(
@@ -361,7 +460,10 @@ class _PenyakitFormPageState extends State<PenyakitFormPage> {
                                           flex: 2,
                                           child: Text(
                                             'Nama Penyakit',
-                                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 12,
+                                            ),
                                             textAlign: TextAlign.center,
                                           ),
                                         ),
@@ -369,7 +471,10 @@ class _PenyakitFormPageState extends State<PenyakitFormPage> {
                                           flex: 3,
                                           child: Text(
                                             'Deskripsi',
-                                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 12,
+                                            ),
                                             textAlign: TextAlign.center,
                                           ),
                                         ),
@@ -377,89 +482,135 @@ class _PenyakitFormPageState extends State<PenyakitFormPage> {
                                           flex: 2,
                                           child: Text(
                                             'Hindari Bahan',
-                                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 12,
+                                            ),
                                             textAlign: TextAlign.center,
                                           ),
                                         ),
                                       ],
                                     ),
                                   ),
-                                  
+
                                   // Table Data
                                   Expanded(
-                                    child: _dataPenyakit.isEmpty
-                                        ? const Center(
-                                            child: Text(
-                                              'Belum ada data penyakit',
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.grey,
+                                    child:
+                                        PenyakitFormPage.dataPenyakit.isEmpty
+                                            ? const Center(
+                                              child: Text(
+                                                'Belum ada data penyakit',
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  color: Colors.grey,
+                                                ),
                                               ),
-                                            ),
-                                          )
-                                        : ListView.builder(
-                                            itemCount: _dataPenyakit.length,
-                                            itemBuilder: (context, index) {
-                                              final data = _dataPenyakit[index];
-                                              final isSelected = _selectedIndex == index;
-                                              
-                                              return GestureDetector(
-                                                onTap: () {
-                                                  setState(() {
-                                                    _selectedIndex = index;
-                                                  });
-                                                },
-                                                child: Container(
-                                                  padding: const EdgeInsets.symmetric(vertical: 12),
-                                                  decoration: BoxDecoration(
-                                                    color: isSelected ? const Color(0xFF225840).withOpacity(0.1) : null,
-                                                    border: Border(
-                                                      bottom: BorderSide(color: Colors.grey[300]!),
+                                            )
+                                            : ListView.builder(
+                                              itemCount:
+                                                  PenyakitFormPage
+                                                      .dataPenyakit
+                                                      .length,
+                                              itemBuilder: (context, index) {
+                                                final data =
+                                                    PenyakitFormPage
+                                                        .dataPenyakit[index];
+                                                final isSelected =
+                                                    _selectedIndex == index;
+
+                                                return GestureDetector(
+                                                  onTap: () {
+                                                    setState(() {
+                                                      _selectedIndex = index;
+                                                    });
+                                                  },
+                                                  child: Container(
+                                                    padding:
+                                                        const EdgeInsets.symmetric(
+                                                          vertical: 12,
+                                                        ),
+                                                    decoration: BoxDecoration(
+                                                      color:
+                                                          isSelected
+                                                              ? const Color(
+                                                                0xFF225840,
+                                                              ).withOpacity(0.1)
+                                                              : null,
+                                                      border: Border(
+                                                        bottom: BorderSide(
+                                                          color:
+                                                              Colors.grey[300]!,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    child: Row(
+                                                      children: [
+                                                        Expanded(
+                                                          flex: 2,
+                                                          child: Text(
+                                                            data['nama'],
+                                                            textAlign:
+                                                                TextAlign
+                                                                    .center,
+                                                            style: TextStyle(
+                                                              fontSize: 10,
+                                                              fontWeight:
+                                                                  isSelected
+                                                                      ? FontWeight
+                                                                          .bold
+                                                                      : FontWeight
+                                                                          .normal,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                        Expanded(
+                                                          flex: 3,
+                                                          child: Text(
+                                                            data['deskripsi'],
+                                                            textAlign:
+                                                                TextAlign
+                                                                    .center,
+                                                            maxLines: 2,
+                                                            overflow:
+                                                                TextOverflow
+                                                                    .ellipsis,
+                                                            style: TextStyle(
+                                                              fontSize: 10,
+                                                              fontWeight:
+                                                                  isSelected
+                                                                      ? FontWeight
+                                                                          .bold
+                                                                      : FontWeight
+                                                                          .normal,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                        Expanded(
+                                                          flex: 2,
+                                                          child: Text(
+                                                            (data['hindariBahan']
+                                                                    as List)
+                                                                .join(', '),
+                                                            textAlign:
+                                                                TextAlign
+                                                                    .center,
+                                                            style: TextStyle(
+                                                              fontSize: 10,
+                                                              fontWeight:
+                                                                  isSelected
+                                                                      ? FontWeight
+                                                                          .bold
+                                                                      : FontWeight
+                                                                          .normal,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
                                                     ),
                                                   ),
-                                                  child: Row(
-                                                    children: [
-                                                      Expanded(
-                                                        flex: 2,
-                                                        child: Text(
-                                                          data['nama'],
-                                                          textAlign: TextAlign.center,
-                                                          style: TextStyle(
-                                                            fontSize: 10,
-                                                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                      Expanded(
-                                                        flex: 3,
-                                                        child: Text(
-                                                          data['deskripsi'],
-                                                          textAlign: TextAlign.center,
-                                                          maxLines: 2,
-                                                          overflow: TextOverflow.ellipsis,
-                                                          style: TextStyle(
-                                                            fontSize: 10,
-                                                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                      Expanded(
-                                                        flex: 2,
-                                                        child: Text(
-                                                          (data['hindariBahan'] as List).join(', '),
-                                                          textAlign: TextAlign.center,
-                                                          style: TextStyle(
-                                                            fontSize: 10,
-                                                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              );
-                                            },
-                                          ),
+                                                );
+                                              },
+                                            ),
                                   ),
                                 ],
                               ),
@@ -478,7 +629,7 @@ class _PenyakitFormPageState extends State<PenyakitFormPage> {
     );
   }
 
-    Widget _buildActionButton(String text, Color color, VoidCallback onPressed) {
+  Widget _buildActionButton(String text, Color color, VoidCallback onPressed) {
     return SizedBox(
       width: 80,
       height: 43,
@@ -490,17 +641,14 @@ class _PenyakitFormPageState extends State<PenyakitFormPage> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          padding: EdgeInsets.zero, // Mengurangi padding internal
+          padding: EdgeInsets.zero,
           elevation: 2,
         ),
         child: Text(
           text,
-          style: const TextStyle(
-            fontSize: 10, // Ukuran font lebih kecil
-            fontWeight: FontWeight.bold,
-          ),
-          maxLines: 1, // Memastikan teks hanya 1 baris
-          overflow: TextOverflow.visible, // Memungkinkan teks melebihi batas jika perlu
+          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+          maxLines: 1,
+          overflow: TextOverflow.visible,
         ),
       ),
     );
