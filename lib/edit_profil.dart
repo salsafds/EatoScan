@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'user_model.dart';
+import 'package:bcrypt/bcrypt.dart';
+
 
 class EditProfilPage extends StatefulWidget {
   const EditProfilPage({super.key});
@@ -14,6 +18,53 @@ class _EditProfilPageState extends State<EditProfilPage> {
   final TextEditingController kataSandiLamaController = TextEditingController();
   final TextEditingController kataSandiBaruController = TextEditingController();
   final TextEditingController konfirmasiSandiController = TextEditingController();
+
+  late Box _eatoscanBox;
+  late Box<UserModel> _userBox;
+  UserModel? _currentUser;
+
+  @override
+  void initState() {
+    super.initState();
+    _eatoscanBox = Hive.box('eatoscanBox');
+    _userBox = Hive.box<UserModel>('users');
+    _loadUserData();
+  }
+
+  void _loadUserData() async {
+    // final loginBox = await Hive.openBox('login');
+    // final userBox = Hive.box<UserModel>('users');
+    // final userId = loginBox.get('currentUserId');
+
+    // if (userId != null) {
+    //   final currentUser = userBox.get(userId);
+    //   if (currentUser != null) {
+    //     _nameController.text = currentUser.username;
+    //     _emailController.text = currentUser.email;
+    //   }
+    // }
+
+    final isLoggedIn = _eatoscanBox.get('isLoggedIn', defaultValue: false);
+    final loggedInUser = _eatoscanBox.get('loggedInUser');
+    if (isLoggedIn && loggedInUser != null) {
+        // final Map<String, dynamic> userData =
+        //     Map<String, dynamic>.from(_eatoscanBox.get('loggedInUserData', defaultValue: {}));
+        // namaController.text = userData['nama'] ?? '';
+        // teleponController.text = userData['telepon'] ?? '';
+        // emailController.text = userData['email'] ?? '';
+      // Cari user di users box berdasarkan username
+      _currentUser = _userBox.values.firstWhere(
+        (user) => user.username == loggedInUser,
+        orElse: () => UserModel(username: '', email: '', password: ''),
+      );
+      setState(() {
+        namaController.text = _currentUser!.username;
+        emailController.text = _currentUser!.email;
+        teleponController.text = _currentUser!.telepon ?? ''; // Jika telepon tidak ada di UserModel
+      });
+    }
+  }
+
 
   InputDecoration inputStyle(String label) {
     return InputDecoration(
@@ -42,6 +93,21 @@ class _EditProfilPageState extends State<EditProfilPage> {
       return;
     }
 
+    if (kataSandiBaruController.text.isNotEmpty) {
+      if (!BCrypt.checkpw(kataSandiLamaController.text, _currentUser!.password)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Kata sandi lama salah.')),
+        );
+        return;
+      }
+      // Validasi kata sandi jika pengguna ingin mengganti
+      if (kataSandiLamaController.text != _currentUser!.password) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Kata sandi lama salah.')),
+        );
+        return;
+      }
+
     if (kataSandiBaruController.text != konfirmasiSandiController.text) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Konfirmasi kata sandi tidak cocok.')),
@@ -49,7 +115,43 @@ class _EditProfilPageState extends State<EditProfilPage> {
       return;
     }
 
-    Navigator.pop(context);
+    if (kataSandiBaruController.text.length < 8) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Kata sandi baru harus minimal 8 karakter.')),
+        );
+        return;
+      }
+    }
+
+    if (teleponController.text.isNotEmpty &&
+        !RegExp(r'^\+?[1-9]\d{1,14}$').hasMatch(teleponController.text)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Format nomor telepon tidak valid.')),
+      );
+      return;
+    }
+
+    if (_currentUser != null) {
+      // Perbarui data pengguna
+      _currentUser!.username = namaController.text;
+      _currentUser!.email = emailController.text;
+      _currentUser!.telepon = teleponController.text.isNotEmpty ? teleponController.text : null;
+      if (kataSandiBaruController.text.isNotEmpty) {
+        _currentUser!.password = kataSandiBaruController.text;
+      }
+
+      // Simpan ke users box
+      await _currentUser!.save();
+
+      // Perbarui loggedInUser di eatoscanBox jika username berubah
+      await _eatoscanBox.put('loggedInUser', namaController.text);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Profil berhasil diperbarui.')),
+      );
+
+      Navigator.pop(context);
+    }
   }
 
   @override
