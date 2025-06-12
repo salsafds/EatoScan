@@ -1,6 +1,6 @@
-import 'dart:io';
+// import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
+// import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:image_picker/image_picker.dart';
@@ -20,13 +20,32 @@ class _LandingPageState extends State<LandingPage> {
   bool isScanning = false;
   late bool isLoggedIn;
   late String username;
-  final ImagePicker _picker = ImagePicker();
+  // final ImagePicker _picker = ImagePicker();
+  final PageController _pageController = PageController();
+  int _currentPage = 0;
 
   @override
   void initState() {
     super.initState();
     _produkBox = Hive.box<ProdukModel>('produk');
     _userBox = Hive.box('eatoscanBox');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+      return Scaffold(
+      backgroundColor: const Color(0xFF1E4D2B),
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildHeader(context),
+            _buildScannerSection(),
+            const SizedBox(height: 12),
+            _buildSlideSection(),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildHeader(BuildContext context) {
@@ -110,189 +129,181 @@ class _LandingPageState extends State<LandingPage> {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(28),
         child: MobileScanner(
-          controller: MobileScannerController(
-            detectionSpeed:
-                DetectionSpeed.noDuplicates, // Otomatis deteksi tanpa duplikat
-            facing: CameraFacing.back,
-            torchEnabled: false,
-            autoStart: true, // Mulai otomatis
-          ),
+          controller: MobileScannerController(),
           onDetect: (BarcodeCapture capture) async {
-            if (!isScanning) {
-              setState(() => isScanning = true);
-              final List<Barcode> barcodes = capture.barcodes;
-              for (final barcode in barcodes) {
-                final String? code = barcode.rawValue;
-                if (code != null) {
-                  debugPrint('Barcode ditemukan: $code');
-                  final XFile? photo = await _picker.pickImage(
-                    source: ImageSource.camera,
-                  );
-                  if (photo != null) {
-                    final matchedProduct = _produkBox.values.firstWhere(
-                      (produk) => produk.kode == code,
-                      orElse:
-                          () => ProdukModel(
-                            nama: 'Tidak ditemukan',
-                            kode: '',
-                            nutrisi: '',
-                            tambahan: '',
-                            risiko: '',
-                          ),
-                    );
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder:
-                            (context) => ProductDetailScreen(
-                              product: matchedProduct,
-                              imagePath: photo.path,
-                            ),
-                      ),
-                    );
-                  }
-                }
+          final List<Barcode> barcodes = capture.barcodes;
+          for (final barcode in barcodes) {
+            final String? code = barcode.rawValue;
+            if (code != null) {
+              debugPrint('Barcode ditemukan: $code');
+              final ImagePicker _picker = ImagePicker();
+              final XFile? image = await _picker.pickImage(source: ImageSource.camera);
+              if (image != null) {
+                if (!mounted) return;
+                Navigator.pushNamed(
+                  context,
+                  '/productDetail',
+                    arguments: {'barcode': code, 'capturedImagePath': image.path},
+                );
               }
-              setState(() => isScanning = false);
+              final matchedProduct = _produkBox.values.firstWhere(
+                (produk) => produk.kode == code,
+                orElse: () => ProdukModel(
+                  nama: 'Tidak ditemukan',
+                  kode: '',
+                  nutrisi: '',
+                  tambahan: '',
+                  risiko: '',
+                ),
+              );
+
+              // Menampilkan popup hasil
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: Text('Hasil Scan'),
+                  content: Text(
+                    // TODO nambahin route ke detail produk berdasarkan kode
+                    matchedProduct.nama == 'Tidak ditemukan'
+                        ? 'Produk tidak ditemukan dalam database.'
+                        : 'Produk: ${matchedProduct.nama}\nRisiko: ${matchedProduct.risiko}',
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('Tutup'),
+                    ),
+                  ],
+                ),
+              );
             }
-          },
+          }
+        },
+          // onDetect: (BarcodeCapture capture) async {
+          //   if (!isScanning) {
+          //     setState(() => isScanning = true);
+          //     final List<Barcode> barcodes = capture.barcodes;
+          //     for (final barcode in barcodes) {
+          //       final String? code = barcode.rawValue;
+          //       if (code != null) {
+          //         debugPrint('Barcode ditemukan: $code');
+          //         final XFile? photo = await _picker.pickImage(
+          //           source: ImageSource.camera,
+          //         );
+          //         if (photo != null) {
+          //           final matchedProduct = _produkBox.values.firstWhere(
+          //             (produk) => produk.kode == code,
+          //             orElse:
+          //                 () => ProdukModel(
+          //                   nama: 'Tidak ditemukan',
+          //                   kode: '',
+          //                   nutrisi: '',
+          //                   tambahan: '',
+          //                   risiko: '',
+          //                 ),
+          //           );
+          //           Navigator.pushReplacement(
+          //             context,
+          //             MaterialPageRoute(
+          //               builder:
+          //                   (context) => ProductDetailScreen(
+          //                     product: matchedProduct,
+          //                     imagePath: photo.path,
+          //                   ),
+          //             ),
+          //           );
+          //         }
+          //       }
+          //     }
+          //     setState(() => isScanning = false);
+          //   }
+          // },
         ),
       ),
     );
   }
 
-  Widget _buildProdukList(List<ProdukModel> produkList) {
-    if (produkList.isEmpty) {
-      return const Expanded(
-        child: Center(
-          child: Text(
-            "Belum ada produk tersedia.",
-            style: TextStyle(color: Colors.white70),
-          ),
-        ),
-      );
-    }
+  Widget _buildSlideSection() {
     return Expanded(
-      child: ListView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        itemCount: produkList.length,
-        itemBuilder: (context, index) {
-          final produk = produkList[index];
-          final Color warnaTag = const Color.fromARGB(255, 37, 189, 54);
-          return Container(
-            margin: const EdgeInsets.only(bottom: 16),
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
+      child: Column(
+        children: [
+          Expanded(
+            child: PageView(
+              controller: _pageController,
+              onPageChanged: (index) {
+                setState(() {
+                  _currentPage = index;
+                });
+              },
               children: [
-                Image.asset(
-                  "assets/images/eatoscan.png",
-                  width: 60,
-                  height: 60,
+                _buildSlide(
+                  title: 'Sehat Itu Pilihan, Scan Dulu Sebelum Beli',
+                  subtitle: 'Eatoscan bantu kamu cek produk kemasan secara cepat & akurat',
+                  icon: Icons.camera_alt,
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        produk.tambahan,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Color.fromARGB(137, 0, 0, 0),
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Container(
-                        width: 40,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: warnaTag,
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        produk.nama,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 4,
-                          horizontal: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: warnaTag.withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.warning_amber_rounded,
-                              color: warnaTag,
-                              size: 16,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              produk.risiko.isNotEmpty
-                                  ? produk.risiko
-                                  : "Tidak diketahui",
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: warnaTag,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+                _buildSlide(
+                  title: 'Gli Lebih Transparan',
+                  subtitle: 'Eatoscan bantu kamu cek gizi, komposisi, dan lainnya. Yuk jadi lebih bijak!',
+                  icon: Icons.info_outline,
+                ),
+                _buildSlide(
+                  title: 'Scan Makananmu, Cek Gizinya!',
+                  subtitle: 'Arahkan kamera ke barcode produk dan temukan info gizi secara instan!',
+                  icon: Icons.qr_code_scanner,
                 ),
               ],
             ),
-          );
-        },
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(3, (index) {
+                return Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 4.0),
+                  width: 8.0,
+                  height: 8.0,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: _currentPage == index ? Colors.white : Colors.white38,
+                  ),
+                );
+              }),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final List<ProdukModel> produkList = _produkBox.values.toList();
-    return Scaffold(
-      backgroundColor: const Color(0xFF1E4D2B),
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildHeader(context),
-            _buildScannerSection(),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Rekomendasi Produk!',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
+  Widget _buildSlide({required String title, required String subtitle, required IconData icon}) {
+    return Container(
+      padding: const EdgeInsets.all(20.0),
+      color: const Color(0xFF1E4D2B),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: Colors.white, size: 50.0),
+          const SizedBox(height: 20.0),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 20.0,
+              fontWeight: FontWeight.bold,
             ),
-            const SizedBox(height: 12),
-            _buildProdukList(produkList),
-          ],
-        ),
+          ),
+          const SizedBox(height: 10.0),
+          Text(
+            subtitle,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 14.0,
+            ),
+          ),
+        ],
       ),
     );
   }
