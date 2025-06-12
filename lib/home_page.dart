@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-// import 'package:hive/hive.dart';
 import 'package:hive_flutter/adapters.dart';
+import 'dart:io';
+
 import 'produk_model.dart';
 
 class HomePage extends StatefulWidget {
@@ -119,7 +120,12 @@ class _HomePageState extends State<HomePage> {
                     itemCount: produkList.length,
                     itemBuilder: (context, index) {
                       final produk = produkList[index];
-                      final Color warnaTag = const Color.fromARGB(255, 37, 189, 54);
+                      final Color warnaTag = const Color.fromARGB(
+                        255,
+                        37,
+                        189,
+                        54,
+                      );
 
                       return Container(
                         margin: const EdgeInsets.only(bottom: 16),
@@ -131,21 +137,34 @@ class _HomePageState extends State<HomePage> {
                         child: Row(
                           children: [
                             // Gambar produk
-                            Image.asset(
-                              produk.gambarPath?.isNotEmpty == true
-                                  ? produk.gambarPath!
-                                  : "assets/images/eatoscan.png",
-                              width: 60,
-                              height: 60,
-                            ),
+                            produk.gambarPath != null &&
+                                    File(produk.gambarPath!).existsSync()
+                                ? Image.file(
+                                  File(produk.gambarPath!),
+                                  width: 60,
+                                  height: 60,
+                                  fit: BoxFit.cover,
+                                  errorBuilder:
+                                      (context, error, stackTrace) =>
+                                          Image.asset(
+                                            "assets/images/eatoscan.png",
+                                            width: 60,
+                                            height: 60,
+                                          ),
+                                )
+                                : Image.asset(
+                                  "assets/images/eatoscan.png",
+                                  width: 60,
+                                  height: 60,
+                                ),
                             const SizedBox(width: 12),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    produk.kategori?.isNotEmpty == true
-                                        ? produk.kategori!
+                                    produk.tambahan.isNotEmpty
+                                        ? produk.tambahan
                                         : "Kategori tidak tersedia",
                                     style: const TextStyle(
                                       fontSize: 12,

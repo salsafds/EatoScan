@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
-import 'package:eatoscan/produk_model.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
+import 'package:path/path.dart' as path;
+
+import 'produk_model.dart';
 
 class EditProdukPage extends StatefulWidget {
   final int index;
@@ -15,23 +20,36 @@ class EditProdukPage extends StatefulWidget {
 class _EditProdukPageState extends State<EditProdukPage> {
   late TextEditingController _namaController;
   late TextEditingController _kodeController;
+  late TextEditingController _takaranKemasanController;
+  late TextEditingController _sajianPerKemasanController;
   late List<TextEditingController> _nutrisiNamaControllers;
   late List<TextEditingController> _nutrisiBeratControllers;
   late List<TextEditingController> _risikoControllers;
+  late Map<String, bool> _preferensiNutrisi;
   String? _selectedKategori;
+  XFile? _gambarProduk;
+  String? _gambarPath;
 
   @override
   void initState() {
     super.initState();
     _namaController = TextEditingController(text: widget.produk.nama);
     _kodeController = TextEditingController(text: widget.produk.kode);
-
+    _takaranKemasanController = TextEditingController(
+      text: widget.produk.takaranKemasan.toString(),
+    );
+    _sajianPerKemasanController = TextEditingController(
+      text: widget.produk.sajianPerKemasan.toString(),
+    );
     _nutrisiNamaControllers = [];
     _nutrisiBeratControllers = [];
+    _preferensiNutrisi = Map.from(widget.produk.preferensiNutrisi);
+    _gambarPath = widget.produk.gambarPath;
+    _selectedKategori = widget.produk.tambahan;
 
     final nutrisiList = widget.produk.nutrisi.split(', ');
     for (var n in nutrisiList) {
-      final match = RegExp(r'(.+)\s\((.+) g\)').firstMatch(n);
+      final match = RegExp(r'(.+)\s\((.+)\s*g\)').firstMatch(n);
       _nutrisiNamaControllers.add(
         TextEditingController(text: match?.group(1) ?? ""),
       );
@@ -46,8 +64,6 @@ class _EditProdukPageState extends State<EditProdukPage> {
             .map((r) => TextEditingController(text: r))
             .toList();
 
-    _selectedKategori = widget.produk.tambahan;
-
     if (_nutrisiNamaControllers.isEmpty) {
       _nutrisiNamaControllers.add(TextEditingController());
       _nutrisiBeratControllers.add(TextEditingController());
@@ -56,12 +72,36 @@ class _EditProdukPageState extends State<EditProdukPage> {
     if (_risikoControllers.isEmpty) {
       _risikoControllers.add(TextEditingController());
     }
+
+    if (_gambarPath != null) {
+      _gambarProduk = XFile(_gambarPath!);
+    }
+  }
+
+  Future<void> _pilihGambar() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _gambarProduk = pickedFile;
+      });
+      final appDir = await getApplicationDocumentsDirectory();
+      final fileName = path.basename(pickedFile.path);
+      final savedImage = await File(
+        pickedFile.path,
+      ).copy('${appDir.path}/$fileName');
+      setState(() {
+        _gambarPath = savedImage.path;
+      });
+    }
   }
 
   @override
   void dispose() {
     _namaController.dispose();
     _kodeController.dispose();
+    _takaranKemasanController.dispose();
+    _sajianPerKemasanController.dispose();
     for (var c in _nutrisiNamaControllers) {
       c.dispose();
     }
@@ -75,6 +115,23 @@ class _EditProdukPageState extends State<EditProdukPage> {
   }
 
   void _updateProduk() async {
+    if (_namaController.text.isEmpty || _kodeController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Nama dan kode harus diisi')),
+      );
+      return;
+    }
+
+    if (_takaranKemasanController.text.isEmpty ||
+        _sajianPerKemasanController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Takaran kemasan dan sajian per kemasan harus diisi'),
+        ),
+      );
+      return;
+    }
+
     final updatedNutrisi = <String>[];
     for (int i = 0; i < _nutrisiNamaControllers.length; i++) {
       final nama = _nutrisiNamaControllers[i].text.trim();
@@ -90,25 +147,28 @@ class _EditProdukPageState extends State<EditProdukPage> {
             .where((e) => e.isNotEmpty)
             .toList();
 
-    if (_namaController.text.isEmpty || _kodeController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Nama dan kode harus diisi')),
+    try {
+      final updatedProduk = ProdukModel(
+        nama: _namaController.text,
+        kode: _kodeController.text,
+        nutrisi: updatedNutrisi.join(', '),
+        tambahan: _selectedKategori ?? 'Tidak diketahui',
+        risiko: updatedRisiko.join(', '),
+        preferensiNutrisi: _preferensiNutrisi,
+        takaranKemasan: double.parse(_takaranKemasanController.text),
+        sajianPerKemasan: double.parse(_sajianPerKemasanController.text),
+        gambarPath: _gambarPath,
       );
-      return;
+
+      final box = Hive.box<ProdukModel>('produk');
+      await box.putAt(widget.index, updatedProduk);
+
+      Navigator.pop(context, true);
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Gagal menyimpan perubahan: $e')));
     }
-
-    final updatedProduk = ProdukModel(
-      nama: _namaController.text,
-      kode: _kodeController.text,
-      nutrisi: updatedNutrisi.join(', '),
-      tambahan: _selectedKategori ?? 'Tidak diketahui',
-      risiko: updatedRisiko.join(', '),
-    );
-
-    final box = Hive.box<ProdukModel>('produk');
-    await box.putAt(widget.index, updatedProduk);
-
-    Navigator.pop(context, true);
   }
 
   void _konfirmasiSimpan() {
@@ -151,11 +211,8 @@ class _EditProdukPageState extends State<EditProdukPage> {
               ),
               TextButton(
                 onPressed: () {
-                  Navigator.pop(context); // Tutup dialog
-                  Navigator.pushReplacementNamed(
-                    context,
-                    '/lihat_produk',
-                  ); // Ganti halaman edit ke lihat produk
+                  Navigator.pop(context);
+                  Navigator.pushReplacementNamed(context, '/lihat_produk');
                 },
                 child: const Text('Ya, Batalkan'),
               ),
@@ -180,9 +237,7 @@ class _EditProdukPageState extends State<EditProdukPage> {
                     alignment: Alignment.centerLeft,
                     child: IconButton(
                       icon: const Icon(Icons.arrow_back, color: Colors.white),
-                      onPressed: () {
-                        Navigator.pushReplacementNamed(context, '/crudAdmin');
-                      },
+                      onPressed: _konfirmasiBatal,
                     ),
                   ),
                   const Center(
@@ -230,6 +285,16 @@ class _EditProdukPageState extends State<EditProdukPage> {
                               label: 'Kode Produk',
                               controller: _kodeController,
                             ),
+                            FormFieldWithLabel(
+                              label: 'Takaran Kemasan (g)',
+                              controller: _takaranKemasanController,
+                              keyboardType: TextInputType.number,
+                            ),
+                            FormFieldWithLabel(
+                              label: 'Sajian per Kemasan',
+                              controller: _sajianPerKemasanController,
+                              keyboardType: TextInputType.number,
+                            ),
                             NutritionInputList(
                               namaControllers: _nutrisiNamaControllers,
                               beratControllers: _nutrisiBeratControllers,
@@ -241,6 +306,57 @@ class _EditProdukPageState extends State<EditProdukPage> {
                                       setState(() => _selectedKategori = value),
                               selectedValue: _selectedKategori,
                             ),
+                            const SizedBox(height: 16),
+                            const Text(
+                              'Preferensi Nutrisi',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            Column(
+                              children:
+                                  _preferensiNutrisi.keys.map((key) {
+                                    return CheckboxListTile(
+                                      title: Text(
+                                        key.replaceAll('_', ' ').toUpperCase(),
+                                      ),
+                                      value: _preferensiNutrisi[key],
+                                      onChanged: (value) {
+                                        setState(() {
+                                          _preferensiNutrisi[key] =
+                                              value ?? false;
+                                        });
+                                      },
+                                    );
+                                  }).toList(),
+                            ),
+                            const SizedBox(height: 16),
+                            Row(
+                              children: [
+                                const SizedBox(
+                                  width: 120,
+                                  child: Text('Gambar Produk'),
+                                ),
+                                Expanded(
+                                  child: ElevatedButton(
+                                    onPressed: _pilihGambar,
+                                    child: Text(
+                                      _gambarProduk == null
+                                          ? 'Pilih Gambar'
+                                          : 'Gambar Dipilih',
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (_gambarProduk != null)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 16),
+                                child: Image.file(
+                                  File(_gambarProduk!.path),
+                                  height: 100,
+                                  width: 100,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
                             const SizedBox(height: 24),
                           ],
                         ),
@@ -265,15 +381,16 @@ class _EditProdukPageState extends State<EditProdukPage> {
   }
 }
 
-// Reusable widgets from CrudProduk
 class FormFieldWithLabel extends StatelessWidget {
   final String label;
   final TextEditingController controller;
+  final TextInputType? keyboardType;
 
   const FormFieldWithLabel({
     super.key,
     required this.label,
     required this.controller,
+    this.keyboardType,
   });
 
   @override
@@ -292,6 +409,7 @@ class FormFieldWithLabel extends StatelessWidget {
           Expanded(
             child: TextField(
               controller: controller,
+              keyboardType: keyboardType,
               decoration: InputDecoration(
                 hintText: label,
                 border: OutlineInputBorder(
@@ -457,8 +575,9 @@ class NutritionInputRow extends StatelessWidget {
                   child: TextField(
                     controller: amountController,
                     style: const TextStyle(fontSize: 12),
+                    keyboardType: TextInputType.number,
                     decoration: InputDecoration(
-                      hintText: 'Berat',
+                      hintText: 'Berat (g)',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(15),
                       ),

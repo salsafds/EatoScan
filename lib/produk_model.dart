@@ -19,15 +19,32 @@ class ProdukModel extends HiveObject {
   @HiveField(4)
   String risiko;
 
+  @HiveField(5)
+  Map<String, bool> preferensiNutrisi;
+
+  @HiveField(6)
+  double takaranKemasan;
+
+  @HiveField(7)
+  double sajianPerKemasan;
+
+  @HiveField(8)
+  String? gambarPath;
+
   ProdukModel({
     required this.nama,
     required this.kode,
     required this.nutrisi,
     required this.tambahan,
     required this.risiko,
+    this.preferensiNutrisi = const {
+      'bebas_laktosa': false,
+      'bebas_gluten': false,
+      'vegetarian': false,
+      'vegan': false,
+    },
+    this.takaranKemasan = 0.0,
+    this.sajianPerKemasan = 0.0,
+    this.gambarPath,
   });
-
-  get gambarPath => null;
-
-  get kategori => null;
 }

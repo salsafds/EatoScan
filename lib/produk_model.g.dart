@@ -22,13 +22,17 @@ class ProdukModelAdapter extends TypeAdapter<ProdukModel> {
       nutrisi: fields[2] as String,
       tambahan: fields[3] as String,
       risiko: fields[4] as String,
+      preferensiNutrisi: (fields[5] as Map).cast<String, bool>(),
+      takaranKemasan: fields[6] as double,
+      sajianPerKemasan: fields[7] as double,
+      gambarPath: fields[8] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, ProdukModel obj) {
     writer
-      ..writeByte(5)
+      ..writeByte(9)
       ..writeByte(0)
       ..write(obj.nama)
       ..writeByte(1)
@@ -38,7 +42,15 @@ class ProdukModelAdapter extends TypeAdapter<ProdukModel> {
       ..writeByte(3)
       ..write(obj.tambahan)
       ..writeByte(4)
-      ..write(obj.risiko);
+      ..write(obj.risiko)
+      ..writeByte(5)
+      ..write(obj.preferensiNutrisi)
+      ..writeByte(6)
+      ..write(obj.takaranKemasan)
+      ..writeByte(7)
+      ..write(obj.sajianPerKemasan)
+      ..writeByte(8)
+      ..write(obj.gambarPath);
   }
 
   @override

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
-import 'package:eatoscan/edit_produk.dart';
+import 'dart:io';
+
 import 'produk_model.dart';
+import 'edit_produk.dart';
 
 class LihatProdukPage extends StatefulWidget {
   const LihatProdukPage({super.key});
@@ -21,7 +23,7 @@ class _LihatProdukPageState extends State<LihatProdukPage> {
   }
 
   void hapusProduk(int index) {
-    showDialog(
+    showDialog<void>(
       context: context,
       builder:
           (BuildContext dialogContext) => AlertDialog(
@@ -42,44 +44,31 @@ class _LihatProdukPageState extends State<LihatProdukPage> {
                       selectedIndex = null;
                     });
                     Navigator.of(dialogContext).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Berhasil: Produk berhasil dihapus.'),
+                        backgroundColor: Colors.green,
+                        duration: Duration(seconds: 3),
+                      ),
+                    );
                   } catch (e) {
                     Navigator.of(dialogContext).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Gagal: Terjadi kesalahan saat menghapus produk: $e',
+                        ),
+                        backgroundColor: Colors.red,
+                        duration: Duration(seconds: 3),
+                      ),
+                    );
                   }
                 },
                 child: const Text('Hapus'),
               ),
             ],
           ),
-    ).then((value) {
-      if (mounted) {
-        if (produkBox.values.length < produkBox.length ||
-            selectedIndex == null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Berhasil: Produk berhasil dihapus.'),
-              backgroundColor: Colors.green,
-              duration: Duration(seconds: 3),
-            ),
-          );
-        } else if (selectedIndex != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Penghapusan dibatalkan.'),
-              backgroundColor: Colors.blue,
-              duration: Duration(seconds: 3),
-            ),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Gagal: Terjadi kesalahan saat menghapus produk.'),
-              backgroundColor: Colors.red,
-              duration: Duration(seconds: 3),
-            ),
-          );
-        }
-      }
-    });
+    );
   }
 
   @override
@@ -144,7 +133,7 @@ class _LihatProdukPageState extends State<LihatProdukPage> {
                       child: SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
                         child: SizedBox(
-                          width: 800,
+                          width: 1350,
                           child: ListView.builder(
                             shrinkWrap: true,
                             itemCount: produkList.length + 1,
@@ -156,13 +145,17 @@ class _LihatProdukPageState extends State<LihatProdukPage> {
                                     vertical: 10,
                                     horizontal: 8,
                                   ),
-                                  child: Row(
-                                    children: const [
-                                      _HeaderCell('Nama Produk'),
-                                      _HeaderCell('Kode Produk'),
-                                      _HeaderCell('Nutrisi'),
-                                      _HeaderCell('Potensi Risiko'),
-                                      _HeaderCell('Kategori'),
+                                  child: const Row(
+                                    children: [
+                                      HeaderCell('Gambar'),
+                                      HeaderCell('Nama Produk'),
+                                      HeaderCell('Kode Produk'),
+                                      HeaderCell('Nutrisi'),
+                                      HeaderCell('Potensi Risiko'),
+                                      HeaderCell('Kategori'),
+                                      HeaderCell('Preferensi Nutrisi'),
+                                      HeaderCell('Takaran Kemasan (g)'),
+                                      HeaderCell('Sajian per Kemasan (g)'),
                                     ],
                                   ),
                                 );
@@ -178,8 +171,7 @@ class _LihatProdukPageState extends State<LihatProdukPage> {
                                   child: Container(
                                     color:
                                         isSelected
-                                            ? Colors.yellow.shade700
-                                                .withOpacity(0.7)
+                                            ? Colors.yellow.shade200
                                             : null,
                                     padding: const EdgeInsets.symmetric(
                                       vertical: 10,
@@ -187,11 +179,73 @@ class _LihatProdukPageState extends State<LihatProdukPage> {
                                     ),
                                     child: Row(
                                       children: [
-                                        _DataCell(produk.nama),
-                                        _DataCell(produk.kode),
-                                        _DataCell(produk.nutrisi),
-                                        _DataCell(produk.risiko),
-                                        _DataCell(produk.tambahan),
+                                        DataCell(
+                                          produk.gambarPath != null
+                                              ? Image.file(
+                                                File(produk.gambarPath!),
+                                                width: 50,
+                                                height: 50,
+                                                fit: BoxFit.cover,
+                                                errorBuilder:
+                                                    (
+                                                      context,
+                                                      error,
+                                                      stackTrace,
+                                                    ) => const Text(
+                                                      'Gambar error',
+                                                    ),
+                                              )
+                                              : const Text('Tidak ada gambar'),
+                                        ),
+                                        DataCell(Text(produk.nama)),
+                                        DataCell(Text(produk.kode)),
+                                        DataCell(
+                                          SizedBox(
+                                            width: 150,
+                                            child: Text(
+                                              produk.nutrisi,
+                                              overflow: TextOverflow.ellipsis,
+                                              maxLines: 2,
+                                            ),
+                                          ),
+                                        ),
+                                        DataCell(
+                                          SizedBox(
+                                            width: 150,
+                                            child: Text(
+                                              produk.risiko,
+                                              overflow: TextOverflow.ellipsis,
+                                              maxLines: 2,
+                                            ),
+                                          ),
+                                        ),
+                                        DataCell(Text(produk.tambahan)),
+                                        DataCell(
+                                          SizedBox(
+                                            width: 150,
+                                            child: Text(
+                                              produk.preferensiNutrisi.entries
+                                                  .where((entry) => entry.value)
+                                                  .map(
+                                                    (entry) => entry.key
+                                                        .replaceAll('_', ' '),
+                                                  )
+                                                  .join(', '),
+                                              overflow: TextOverflow.ellipsis,
+                                              maxLines: 2,
+                                            ),
+                                          ),
+                                        ),
+                                        DataCell(
+                                          Text(
+                                            produk.takaranKemasan.toString(),
+                                          ),
+                                        ),
+                                        DataCell(
+                                          Text(
+                                            produk.sajianPerKemasan.toString(),
+                                          ),
+                                        ),
                                       ],
                                     ),
                                   ),
@@ -210,29 +264,26 @@ class _LihatProdukPageState extends State<LihatProdukPage> {
                           onPressed:
                               selectedIndex != null
                                   ? () {
-                                    final produk = produkBox.getAt(
-                                      selectedIndex!,
-                                    );
+                                    final produk =
+                                        produkBox.getAt(selectedIndex!)!;
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
                                         builder:
                                             (context) => EditProdukPage(
                                               index: selectedIndex!,
-                                              produk: produk!,
+                                              produk: produk,
                                             ),
                                       ),
                                     ).then((result) {
                                       if (result == true && mounted) {
-                                        setState(
-                                          () {},
-                                        ); // Refresh the list after editing
+                                        setState(() {});
                                         ScaffoldMessenger.of(
                                           context,
                                         ).showSnackBar(
                                           const SnackBar(
                                             content: Text(
-                                              'Berhasil: Produk berhasil diubah.',
+                                              'Sukses: Produk berhasil diubah.',
                                             ),
                                             backgroundColor: Colors.green,
                                             duration: Duration(seconds: 3),
@@ -291,9 +342,10 @@ class _LihatProdukPageState extends State<LihatProdukPage> {
   }
 }
 
-class _HeaderCell extends StatelessWidget {
+class HeaderCell extends StatelessWidget {
   final String label;
-  const _HeaderCell(this.label);
+
+  const HeaderCell(this.label, {super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -311,15 +363,13 @@ class _HeaderCell extends StatelessWidget {
   }
 }
 
-class _DataCell extends StatelessWidget {
-  final String value;
-  const _DataCell(this.value);
+class DataCell extends StatelessWidget {
+  final Widget content;
+
+  const DataCell(this.content, {super.key});
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 150,
-      child: Text(value, overflow: TextOverflow.ellipsis),
-    );
+    return SizedBox(width: 150, child: content);
   }
 }

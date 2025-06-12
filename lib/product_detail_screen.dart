@@ -29,6 +29,7 @@ class ProductDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final nutrients = _parseNutrients(product.nutrisi);
+    final isAssetImage = imagePath.startsWith('assets/');
 
     return Scaffold(
       appBar: AppBar(
@@ -41,8 +42,14 @@ class ProductDetailScreen extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: FileImage(File(imagePath)),
+                image:
+                    isAssetImage
+                        ? AssetImage(imagePath)
+                        : FileImage(File(imagePath)),
                 fit: BoxFit.cover,
+                onError:
+                    (exception, stackTrace) =>
+                        const AssetImage('assets/images/eatoscan.png'),
               ),
             ),
           ),
@@ -69,14 +76,18 @@ class ProductDetailScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      product.nama,
+                      product.nama.isNotEmpty
+                          ? product.nama
+                          : 'Produk Tidak Ditemukan',
                       style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     Text(
-                      product.tambahan,
+                      product.tambahan.isNotEmpty
+                          ? product.tambahan
+                          : 'Kategori tidak tersedia',
                       style: const TextStyle(fontSize: 16, color: Colors.grey),
                     ),
                     const SizedBox(height: 10),
@@ -95,9 +106,8 @@ class ProductDetailScreen extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children:
                           nutrients.entries.map((entry) {
-                            final isHigh = entry.value.contains(
-                              'Tinggi',
-                            ); // Placeholder, sesuaikan logika
+                            final value = double.tryParse(entry.value) ?? 0.0;
+                            final isHigh = value > 10.0; // Contoh threshold
                             return _NutrientCard(
                               label: entry.key,
                               value: isHigh ? 'Tinggi' : 'Rendah',
@@ -114,7 +124,6 @@ class ProductDetailScreen extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    // Placeholder untuk rekomendasi (bisa diisi dari Hive)
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
@@ -139,14 +148,29 @@ class ProductDetailScreen extends StatelessWidget {
                     const SizedBox(height: 10),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: const [
+                      children: [
                         _PreferenceCard(
                           label: 'Bebas Laktosa',
-                          isChecked: true,
+                          isChecked:
+                              product.preferensiNutrisi['bebas_laktosa'] ??
+                              false,
                         ),
-                        _PreferenceCard(label: 'Bebas Gluten', isChecked: true),
-                        _PreferenceCard(label: 'Vegetarian', isChecked: true),
-                        _PreferenceCard(label: 'Vegan', isChecked: true),
+                        _PreferenceCard(
+                          label: 'Bebas Gluten',
+                          isChecked:
+                              product.preferensiNutrisi['bebas_gluten'] ??
+                              false,
+                        ),
+                        _PreferenceCard(
+                          label: 'Vegetarian',
+                          isChecked:
+                              product.preferensiNutrisi['vegetarian'] ?? false,
+                        ),
+                        _PreferenceCard(
+                          label: 'Vegan',
+                          isChecked:
+                              product.preferensiNutrisi['vegan'] ?? false,
+                        ),
                       ],
                     ),
                     const SizedBox(height: 10),
@@ -220,10 +244,7 @@ class _ProductCard extends StatelessWidget {
     return Card(
       child: Column(
         children: [
-          const SizedBox(
-            height: 50,
-            child: Placeholder(),
-          ), // Placeholder untuk gambar
+          const SizedBox(height: 50, child: Placeholder()),
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Text(name, textAlign: TextAlign.center),

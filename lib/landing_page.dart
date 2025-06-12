@@ -1,11 +1,12 @@
-// import 'dart:io';
+import 'dart:io';
+import 'dart:typed_data'; // Import untuk Uint8List
 import 'package:flutter/material.dart';
-// import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as path;
 import 'produk_model.dart';
-import 'package:eatoscan/product_detail_screen.dart';
+import 'product_detail_screen.dart';
 
 class LandingPage extends StatefulWidget {
   const LandingPage({super.key});
@@ -17,10 +18,7 @@ class LandingPage extends StatefulWidget {
 class _LandingPageState extends State<LandingPage> {
   late Box<ProdukModel> _produkBox;
   late Box _userBox;
-  bool isScanning = false;
-  late bool isLoggedIn;
-  late String username;
-  // final ImagePicker _picker = ImagePicker();
+  bool _isScanning = false;
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
@@ -32,8 +30,14 @@ class _LandingPageState extends State<LandingPage> {
   }
 
   @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-      return Scaffold(
+    return Scaffold(
       backgroundColor: const Color(0xFF1E4D2B),
       body: SafeArea(
         child: Column(
@@ -129,95 +133,139 @@ class _LandingPageState extends State<LandingPage> {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(28),
         child: MobileScanner(
-          controller: MobileScannerController(),
+          controller: MobileScannerController(
+            detectionSpeed: DetectionSpeed.normal,
+            facing: CameraFacing.back,
+            returnImage: true, // Pastikan pengambilan gambar diaktifkan
+          ),
           onDetect: (BarcodeCapture capture) async {
-          final List<Barcode> barcodes = capture.barcodes;
-          for (final barcode in barcodes) {
-            final String? code = barcode.rawValue;
-            if (code != null) {
-              debugPrint('Barcode ditemukan: $code');
-              final ImagePicker _picker = ImagePicker();
-              final XFile? image = await _picker.pickImage(source: ImageSource.camera);
-              if (image != null) {
-                if (!mounted) return;
-                Navigator.pushNamed(
-                  context,
-                  '/productDetail',
-                    arguments: {'barcode': code, 'capturedImagePath': image.path},
-                );
+            if (_isScanning) return;
+            setState(() => _isScanning = true);
+
+            final List<Barcode> barcodes = capture.barcodes;
+            final Uint8List? imageBytes = capture.image;
+
+            for (final barcode in barcodes) {
+              final String? code = barcode.rawValue;
+              if (code == null) {
+                setState(() => _isScanning = false);
+                continue;
               }
+
+              debugPrint('Barcode ditemukan: $code');
+
+              // Cari produk yang cocok di Hive
               final matchedProduct = _produkBox.values.firstWhere(
                 (produk) => produk.kode == code,
-                orElse: () => ProdukModel(
-                  nama: 'Tidak ditemukan',
-                  kode: '',
-                  nutrisi: '',
-                  tambahan: '',
-                  risiko: '',
-                ),
+                orElse:
+                    () => ProdukModel(
+                      nama: '',
+                      kode: '',
+                      nutrisi: '',
+                      tambahan: '',
+                      risiko: '',
+                      preferensiNutrisi: const {
+                        'bebas_laktosa': false,
+                        'bebas_gluten': false,
+                        'vegetarian': false,
+                        'vegan': false,
+                      },
+                      takaranKemasan: 0.0,
+                      sajianPerKemasan: 0.0,
+                      gambarPath: null,
+                    ),
               );
 
-              // Menampilkan popup hasil
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: Text('Hasil Scan'),
-                  content: Text(
-                    // TODO nambahin route ke detail produk berdasarkan kode
-                    matchedProduct.nama == 'Tidak ditemukan'
-                        ? 'Produk tidak ditemukan dalam database.'
-                        : 'Produk: ${matchedProduct.nama}\nRisiko: ${matchedProduct.risiko}',
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('Tutup'),
-                    ),
-                  ],
+              if (matchedProduct.nama.isEmpty) {
+                // Produk tidak ditemukan, tampilkan pop-up
+                if (!mounted) {
+                  setState(() => _isScanning = false);
+                  return;
+                }
+                await showDialog(
+                  context: context,
+                  builder:
+                      (context) => AlertDialog(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        title: const Text(
+                          'Produk Tidak Ditemukan',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        content: const Text(
+                          'Produk tidak ada dalam data aplikasi.',
+                          textAlign: TextAlign.center,
+                        ),
+                        actionsAlignment: MainAxisAlignment.center,
+                        actions: [
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF1E4D2B),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                              setState(() => _isScanning = false);
+                            },
+                            child: const Text(
+                              'Coba Lagi',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ),
+                        ],
+                      ),
+                );
+                return;
+              }
+
+              // Produk ditemukan, simpan gambar jika tersedia
+              String imagePath =
+                  'assets/images/eatoscan.png'; // Default fallback
+              if (imageBytes != null && imageBytes.isNotEmpty) {
+                try {
+                  final tempDir = await getTemporaryDirectory();
+                  final fileName =
+                      '${DateTime.now().millisecondsSinceEpoch}.jpg';
+                  final tempImagePath = path.join(tempDir.path, fileName);
+                  final imageFile = File(tempImagePath);
+                  await imageFile.writeAsBytes(imageBytes);
+                  imagePath = tempImagePath;
+                  debugPrint('Gambar disimpan di: $imagePath');
+                } catch (e) {
+                  debugPrint('Gagal menyimpan gambar: $e');
+                }
+              } else {
+                debugPrint('Tidak ada imageBytes dari capture.image');
+              }
+
+              if (!mounted) {
+                setState(() => _isScanning = false);
+                return;
+              }
+
+              // Navigasi ke ProductDetailScreen
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder:
+                      (context) => ProductDetailScreen(
+                        product: matchedProduct,
+                        imagePath: imagePath,
+                      ),
                 ),
-              );
+              ).then((_) {
+                if (mounted) {
+                  setState(() => _isScanning = false);
+                }
+              });
+
+              break; // Hentikan loop setelah menemukan barcode pertama
             }
-          }
-        },
-          // onDetect: (BarcodeCapture capture) async {
-          //   if (!isScanning) {
-          //     setState(() => isScanning = true);
-          //     final List<Barcode> barcodes = capture.barcodes;
-          //     for (final barcode in barcodes) {
-          //       final String? code = barcode.rawValue;
-          //       if (code != null) {
-          //         debugPrint('Barcode ditemukan: $code');
-          //         final XFile? photo = await _picker.pickImage(
-          //           source: ImageSource.camera,
-          //         );
-          //         if (photo != null) {
-          //           final matchedProduct = _produkBox.values.firstWhere(
-          //             (produk) => produk.kode == code,
-          //             orElse:
-          //                 () => ProdukModel(
-          //                   nama: 'Tidak ditemukan',
-          //                   kode: '',
-          //                   nutrisi: '',
-          //                   tambahan: '',
-          //                   risiko: '',
-          //                 ),
-          //           );
-          //           Navigator.pushReplacement(
-          //             context,
-          //             MaterialPageRoute(
-          //               builder:
-          //                   (context) => ProductDetailScreen(
-          //                     product: matchedProduct,
-          //                     imagePath: photo.path,
-          //                   ),
-          //             ),
-          //           );
-          //         }
-          //       }
-          //     }
-          //     setState(() => isScanning = false);
-          //   }
-          // },
+          },
         ),
       ),
     );
@@ -238,17 +286,20 @@ class _LandingPageState extends State<LandingPage> {
               children: [
                 _buildSlide(
                   title: 'Sehat Itu Pilihan, Scan Dulu Sebelum Beli',
-                  subtitle: 'Eatoscan bantu kamu cek produk kemasan secara cepat & akurat',
+                  subtitle:
+                      'Eatoscan bantu kamu cek produk kemasan secara cepat & akurat',
                   icon: Icons.camera_alt,
                 ),
                 _buildSlide(
                   title: 'Gli Lebih Transparan',
-                  subtitle: 'Eatoscan bantu kamu cek gizi, komposisi, dan lainnya. Yuk jadi lebih bijak!',
+                  subtitle:
+                      'Eatoscan bantu kamu cek gizi, komposisi, dan lainnya. Yuk jadi lebih bijak!',
                   icon: Icons.info_outline,
                 ),
                 _buildSlide(
                   title: 'Scan Makananmu, Cek Gizinya!',
-                  subtitle: 'Arahkan kamera ke barcode produk dan temukan info gizi secara instan!',
+                  subtitle:
+                      'Arahkan kamera ke barcode produk dan temukan info gizi secara instan!',
                   icon: Icons.qr_code_scanner,
                 ),
               ],
@@ -265,7 +316,8 @@ class _LandingPageState extends State<LandingPage> {
                   height: 8.0,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: _currentPage == index ? Colors.white : Colors.white38,
+                    color:
+                        _currentPage == index ? Colors.white : Colors.white38,
                   ),
                 );
               }),
@@ -276,7 +328,11 @@ class _LandingPageState extends State<LandingPage> {
     );
   }
 
-  Widget _buildSlide({required String title, required String subtitle, required IconData icon}) {
+  Widget _buildSlide({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+  }) {
     return Container(
       padding: const EdgeInsets.all(20.0),
       color: const Color(0xFF1E4D2B),
@@ -298,10 +354,7 @@ class _LandingPageState extends State<LandingPage> {
           Text(
             subtitle,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 14.0,
-            ),
+            style: const TextStyle(color: Colors.white70, fontSize: 14.0),
           ),
         ],
       ),

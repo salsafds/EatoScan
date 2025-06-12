@@ -2,6 +2,10 @@ import 'package:eatoscan/produk_model.dart';
 import 'package:flutter/material.dart';
 import 'package:eatoscan/lihat_produk.dart';
 import 'package:hive/hive.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
+import 'package:path/path.dart' as path;
 
 class CrudProduk extends StatelessWidget {
   const CrudProduk({super.key});
@@ -27,6 +31,10 @@ class ProductFormPage extends StatefulWidget {
 class _ProductFormPageState extends State<ProductFormPage> {
   final TextEditingController _namaController = TextEditingController();
   final TextEditingController _kodeController = TextEditingController();
+  final TextEditingController _takaranKemasanController =
+      TextEditingController();
+  final TextEditingController _sajianPerKemasanController =
+      TextEditingController();
   final List<TextEditingController> _nutrisiNamaControllers = [
     TextEditingController(),
   ];
@@ -37,11 +45,38 @@ class _ProductFormPageState extends State<ProductFormPage> {
     TextEditingController(),
   ];
   String? _selectedKategori;
+  Map<String, bool> _preferensiNutrisi = {
+    'bebas_laktosa': false,
+    'bebas_gluten': false,
+    'vegetarian': false,
+    'vegan': false,
+  };
+  XFile? _gambarProduk;
+  String? _gambarPath;
 
-  // Fungsi untuk reset semua input form
+  Future<void> _pilihGambar() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _gambarProduk = pickedFile;
+      });
+      final appDir = await getApplicationDocumentsDirectory();
+      final fileName = path.basename(pickedFile.path);
+      final savedImage = await File(
+        pickedFile.path,
+      ).copy('${appDir.path}/$fileName');
+      setState(() {
+        _gambarPath = savedImage.path;
+      });
+    }
+  }
+
   void _resetForm() {
     _namaController.clear();
     _kodeController.clear();
+    _takaranKemasanController.clear();
+    _sajianPerKemasanController.clear();
     for (var controller in _nutrisiNamaControllers) {
       controller.clear();
     }
@@ -53,7 +88,14 @@ class _ProductFormPageState extends State<ProductFormPage> {
     }
     setState(() {
       _selectedKategori = null;
-      // Reset daftar nutrisi dan risiko ke 1 baris saja
+      _preferensiNutrisi = {
+        'bebas_laktosa': false,
+        'bebas_gluten': false,
+        'vegetarian': false,
+        'vegan': false,
+      };
+      _gambarProduk = null;
+      _gambarPath = null;
       _nutrisiNamaControllers.clear();
       _nutrisiBeratControllers.clear();
       _risikoControllers.clear();
@@ -67,6 +109,8 @@ class _ProductFormPageState extends State<ProductFormPage> {
   void dispose() {
     _namaController.dispose();
     _kodeController.dispose();
+    _takaranKemasanController.dispose();
+    _sajianPerKemasanController.dispose();
     for (var c in _nutrisiNamaControllers) {
       c.dispose();
     }
@@ -80,7 +124,6 @@ class _ProductFormPageState extends State<ProductFormPage> {
   }
 
   void _simpanProduk() async {
-    // Validate required fields
     if (_namaController.text.isEmpty || _kodeController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -92,7 +135,6 @@ class _ProductFormPageState extends State<ProductFormPage> {
       return;
     }
 
-    // Validate nutrition fields
     final nutrisiList = <String>[];
     for (int i = 0; i < _nutrisiNamaControllers.length; i++) {
       final nama = _nutrisiNamaControllers[i].text.trim();
@@ -110,7 +152,20 @@ class _ProductFormPageState extends State<ProductFormPage> {
       nutrisiList.add('$nama ($berat g)');
     }
 
-    // Validasi dropdown kategori
+    if (_takaranKemasanController.text.isEmpty ||
+        _sajianPerKemasanController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Gagal: Takaran kemasan dan sajian per kemasan harus diisi.',
+          ),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
+
     if (_selectedKategori == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -122,7 +177,6 @@ class _ProductFormPageState extends State<ProductFormPage> {
       return;
     }
 
-    // Collect risiko list
     final risikoList = <String>[];
     for (var controller in _risikoControllers) {
       final text = controller.text.trim();
@@ -140,35 +194,23 @@ class _ProductFormPageState extends State<ProductFormPage> {
     }
 
     try {
-      // Create and save the product
       final produk = ProdukModel(
         nama: _namaController.text,
         kode: _kodeController.text,
         nutrisi: nutrisiList.join(', '),
         tambahan: _selectedKategori ?? 'Tidak diketahui',
         risiko: risikoList.join(', '),
+        preferensiNutrisi: _preferensiNutrisi,
+        takaranKemasan: double.parse(_takaranKemasanController.text),
+        sajianPerKemasan: double.parse(_sajianPerKemasanController.text),
+        gambarPath: _gambarPath,
       );
 
       final produkBox = Hive.box<ProdukModel>('produk');
       await produkBox.add(produk);
 
-      // Clear input fields
-      _namaController.clear();
-      _kodeController.clear();
-      for (var c in _nutrisiNamaControllers) {
-        c.clear();
-      }
-      for (var c in _nutrisiBeratControllers) {
-        c.clear();
-      }
-      for (var c in _risikoControllers) {
-        c.clear();
-      }
-      _selectedKategori = null;
+      _resetForm();
 
-      setState(() {});
-
-      // Show success notification
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Sukses: Produk berhasil disimpan.'),
@@ -177,7 +219,6 @@ class _ProductFormPageState extends State<ProductFormPage> {
         ),
       );
     } catch (e) {
-      // Show failure notification for unexpected errors
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Gagal: Terjadi kesalahan saat menyimpan produk. ($e)'),
@@ -265,6 +306,16 @@ class _ProductFormPageState extends State<ProductFormPage> {
                               label: 'Kode Produk',
                               controller: _kodeController,
                             ),
+                            FormFieldWithLabel(
+                              label: 'Takaran Kemasan (g)',
+                              controller: _takaranKemasanController,
+                              keyboardType: TextInputType.number,
+                            ),
+                            FormFieldWithLabel(
+                              label: 'Sajian per Kemasan',
+                              controller: _sajianPerKemasanController,
+                              keyboardType: TextInputType.number,
+                            ),
                             NutritionInputList(
                               namaControllers: _nutrisiNamaControllers,
                               beratControllers: _nutrisiBeratControllers,
@@ -276,6 +327,57 @@ class _ProductFormPageState extends State<ProductFormPage> {
                                       setState(() => _selectedKategori = value),
                               selectedValue: _selectedKategori,
                             ),
+                            const SizedBox(height: 16),
+                            const Text(
+                              'Preferensi Nutrisi',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            Column(
+                              children:
+                                  _preferensiNutrisi.keys.map((key) {
+                                    return CheckboxListTile(
+                                      title: Text(
+                                        key.replaceAll('_', ' ').toUpperCase(),
+                                      ),
+                                      value: _preferensiNutrisi[key],
+                                      onChanged: (value) {
+                                        setState(() {
+                                          _preferensiNutrisi[key] =
+                                              value ?? false;
+                                        });
+                                      },
+                                    );
+                                  }).toList(),
+                            ),
+                            const SizedBox(height: 16),
+                            Row(
+                              children: [
+                                const SizedBox(
+                                  width: 120,
+                                  child: Text('Gambar Produk'),
+                                ),
+                                Expanded(
+                                  child: ElevatedButton(
+                                    onPressed: _pilihGambar,
+                                    child: Text(
+                                      _gambarProduk == null
+                                          ? 'Pilih Gambar'
+                                          : 'Gambar Dipilih',
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (_gambarProduk != null)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 16),
+                                child: Image.file(
+                                  File(_gambarProduk!.path),
+                                  height: 100,
+                                  width: 100,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
                             const SizedBox(height: 24),
                           ],
                         ),
@@ -296,11 +398,13 @@ class _ProductFormPageState extends State<ProductFormPage> {
 class FormFieldWithLabel extends StatelessWidget {
   final String label;
   final TextEditingController controller;
+  final TextInputType? keyboardType;
 
   const FormFieldWithLabel({
     super.key,
     required this.label,
     required this.controller,
+    this.keyboardType,
   });
 
   @override
@@ -319,6 +423,7 @@ class FormFieldWithLabel extends StatelessWidget {
           Expanded(
             child: TextField(
               controller: controller,
+              keyboardType: keyboardType,
               decoration: InputDecoration(
                 hintText: label,
                 border: OutlineInputBorder(
@@ -484,8 +589,9 @@ class NutritionInputRow extends StatelessWidget {
                   child: TextField(
                     controller: amountController,
                     style: const TextStyle(fontSize: 12),
+                    keyboardType: TextInputType.number,
                     decoration: InputDecoration(
-                      hintText: 'Berat',
+                      hintText: 'Berat (g)',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(15),
                       ),
