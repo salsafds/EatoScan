@@ -44,7 +44,6 @@ dependencies:
   vector_math: ^2.1.4
   flutter:
     sdk: flutter
-    provider: ^6.1.2
 
 
   # The following adds the Cupertino Icons font to your application.
