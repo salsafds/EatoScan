@@ -87,7 +87,7 @@ class DashboardAdmin extends StatelessWidget {
                       _buildMenuButton(
                         icon: Iconsax.heart,
                         label: 'KESEHATAN',
-                        onTap: () {},
+                        onTap: () {Navigator.pushNamed(context, '/crudPenyakit');},
                       ),
                       _buildMenuButton(
                         icon: Iconsax.element_4,

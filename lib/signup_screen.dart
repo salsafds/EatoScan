@@ -156,7 +156,7 @@ class _SignupScreenState extends State<SignupScreen> {
             const SizedBox(height: 20),
             _buildTextField(_passwordController, 'Masukkan kata sandi', 'Kata Sandi', obscureText: true),
             const SizedBox(height: 32),
-            _buildTextField(_konfirController, 'Masukkan kata sandi', 'Konfirmasi Kata Sandi'),
+            _buildTextField(_konfirController, 'Masukkan kata sandi', 'Konfirmasi Kata Sandi', obscureText: true),
             const SizedBox(height: 24),
             _buildLoginButton(),
             const SizedBox(height: 12),

@@ -16,6 +16,7 @@ import 'package:eatoscan/login_admin.dart';
 import 'package:eatoscan/login_screen.dart';
 import 'package:eatoscan/landing_page.dart';
 import 'package:eatoscan/crud_produk.dart';
+import 'package:eatoscan/crud_penyakit.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -65,6 +66,7 @@ class MyApp extends StatelessWidget {
         '/landingPage': (context) => LandingPage(),
         '/crudAdmin': (context) => const CrudProduk(),
         '/setting': (context) => SettingPage(),
+        '/crudPenyakit': (context) => CrudPenyakitPage(),
         '/dashboard': (context) => const DashboardAdmin(),
         '/lihat_produk':
             (context) => const LihatProdukPage(), // Tambahkan rute ini

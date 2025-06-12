@@ -1,6 +1,6 @@
-import 'dart:ui';
+// import 'dart:ui';
 
-import 'package:flutter/foundation.dart';
+// import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 // import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -18,6 +18,7 @@ class LandingPage extends StatefulWidget {
 class _LandingPageState extends State<LandingPage> {
   late Box<ProdukModel> _produkBox;
   late Box _userBox;
+  bool isScanning = false;
   late bool isLoggedIn;
   late String username;
 
@@ -126,53 +127,60 @@ class _LandingPageState extends State<LandingPage> {
     },
   );
 }
+//   Widget _buildScannerSection() {
+//   final scanner = _buildCameraScanner(); // Scanner yang ingin ditampilkan
+
+//   if (kIsWeb) {
+//     return Stack(
+//       alignment: Alignment.center,
+//       children: [
+//         // Scanner ditampilkan seperti biasa
+//         scanner,
+
+//         // Efek blur di atas scanner
+//         Positioned.fill(
+//           child: ClipRRect(
+//             borderRadius: BorderRadius.circular(28),
+//             child: BackdropFilter(
+//               filter: ImageFilter.blur(sigmaX: 6.0, sigmaY: 6.0),
+//               child: Container(
+//                 color: Colors.black.withOpacity(0.3), // Lapisan semi-transparan
+//               ),
+//             ),
+//           ),
+//         ),
+
+//         // Teks peringatan
+//         const Positioned(
+//           top: 20,
+//           left: 20,
+//           right: 20,
+//           child: Text(
+//             "Scan kamera hanya tersedia di versi Android/iOS.",
+//             textAlign: TextAlign.center,
+//             style: TextStyle(
+//               fontSize: 16,
+//               color: Colors.white,
+//               fontWeight: FontWeight.bold,
+//               shadows: [
+//                 Shadow(blurRadius: 4, color: Colors.black45, offset: Offset(1, 1))
+//               ],
+//             ),
+//           ),
+//         ),
+//       ],
+//     );
+//   } else {
+//     return scanner;
+//   }
+// }
+
   Widget _buildScannerSection() {
-  final scanner = _buildCameraScanner(); // Scanner yang ingin ditampilkan
-
-  if (kIsWeb) {
-    return Stack(
-      alignment: Alignment.center,
-      children: [
-        // Scanner ditampilkan seperti biasa
-        scanner,
-
-        // Efek blur di atas scanner
-        Positioned.fill(
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(28),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 6.0, sigmaY: 6.0),
-              child: Container(
-                color: Colors.black.withOpacity(0.3), // Lapisan semi-transparan
-              ),
-            ),
-          ),
-        ),
-
-        // Teks peringatan
-        const Positioned(
-          top: 20,
-          left: 20,
-          right: 20,
-          child: Text(
-            "Scan kamera hanya tersedia di versi Android/iOS.",
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              shadows: [
-                Shadow(blurRadius: 4, color: Colors.black45, offset: Offset(1, 1))
-              ],
-            ),
-          ),
-        ),
-      ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      child: _buildCameraScanner(),
     );
-  } else {
-    return scanner;
   }
-}
 
   Widget _buildCameraScanner() {
   return SizedBox(
@@ -181,14 +189,47 @@ class _LandingPageState extends State<LandingPage> {
     child: ClipRRect(
       borderRadius: BorderRadius.circular(28),
       child: MobileScanner(
-        controller: MobileScannerController(),
-        onDetect: (BarcodeCapture capture) {
+        controller: MobileScannerController(
+          // detectionSpeed: DetectionSpeed.normal,
+          // facing: CameraFacing.back,
+          // torchEnabled: false,
+        ),
+        onDetect: (BarcodeCapture capture) async {
           final List<Barcode> barcodes = capture.barcodes;
           for (final barcode in barcodes) {
             final String? code = barcode.rawValue;
             if (code != null) {
               debugPrint('Barcode ditemukan: $code');
-              // Tambahkan logika selanjutnya, misalnya cari produk berdasarkan barcode.
+              // Mencari produk berdasarkan kode (barcode)
+              final matchedProduct = _produkBox.values.firstWhere(
+                (produk) => produk.kode == code,
+                orElse: () => ProdukModel(
+                  nama: 'Tidak ditemukan',
+                  kode: '',
+                  nutrisi: '',
+                  tambahan: '',
+                  risiko: '',
+                ),
+              );
+
+              // Menampilkan popup hasil
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: Text('Hasil Scan'),
+                  content: Text(
+                    matchedProduct.nama == 'Tidak ditemukan'
+                        ? 'Produk tidak ditemukan dalam database.'
+                        : 'Produk: ${matchedProduct.nama}\nRisiko: ${matchedProduct.risiko}',
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('Tutup'),
+                    ),
+                  ],
+                ),
+              );
             }
           }
         },
