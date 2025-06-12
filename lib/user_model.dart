@@ -22,6 +22,9 @@ class UserModel extends HiveObject {
   @HiveField(5)
   String? penyakit;
 
+  @HiveField(6)
+  String? telepon;
+
   UserModel({
     required this.username,
     required this.email,
@@ -29,5 +32,6 @@ class UserModel extends HiveObject {
     this.usia,
     this.gender,
     this.penyakit,
+    this.telepon,
   });
 }

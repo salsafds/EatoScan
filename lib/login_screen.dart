@@ -2,7 +2,7 @@ import 'package:eatoscan/user_model.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:collection/collection.dart';
-
+import 'package:bcrypt/bcrypt.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -33,13 +33,16 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       final userBox = Hive.box<UserModel>('users');
       final user = userBox.values.firstWhereOrNull(
-        (u) => u.username == username && u.password == password,
+        // (u) => u.username == username && u.password == password,
+        (u) => u.username == username,
       );
 
-      if (user != null) {
+      if (user != null && BCrypt.checkpw(password, user.password)) {
         final box = Hive.box('eatoscanBox');
         await box.put('loggedInUser', username);
         await box.put('isLoggedIn', true);
+        // await box.put('user_name_$username', name);
+        // await box.put('user_email_$username', email);
 
         if (!mounted) return;
         Navigator.pushReplacementNamed(context, '/landingPage', arguments: username);

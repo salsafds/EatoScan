@@ -1,6 +1,7 @@
 import 'package:eatoscan/user_model.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
+import 'package:bcrypt/bcrypt.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -51,9 +52,17 @@ class _SignupScreenState extends State<SignupScreen> {
         return;
       }
 
+      final hashedPassword = BCrypt.hashpw(password, BCrypt.gensalt());
+
       // Simpan ke Hive
-      final newUser = UserModel(username: username, email: email, password: password);
+      final newUser = UserModel(
+        username: username,
+        email: email,
+        password: hashedPassword, // Simpan hash
+      );
       await userBox.add(newUser);
+      // final newUser = UserModel(username: username, email: email, password: password);
+      // await userBox.add(newUser);
 
       _showMessage('Akun berhasil dibuat!');
       if (!mounted) return;
