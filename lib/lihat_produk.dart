@@ -101,7 +101,10 @@ class _LihatProdukPageState extends State<LihatProdukPage> {
                     child: IconButton(
                       icon: const Icon(Icons.arrow_back, color: Colors.white),
                       onPressed: () {
-                        Navigator.pushReplacementNamed(context, '/crudAdmin');
+                        Navigator.of(
+                          context,
+                          rootNavigator: true,
+                        ).pushNamed('/crudAdmin');
                       },
                     ),
                   ),

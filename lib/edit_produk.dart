@@ -179,8 +179,10 @@ class _EditProdukPageState extends State<EditProdukPage> {
                   Align(
                     alignment: Alignment.centerLeft,
                     child: IconButton(
-                      onPressed: _konfirmasiBatal,
                       icon: const Icon(Icons.arrow_back, color: Colors.white),
+                      onPressed: () {
+                        Navigator.pushReplacementNamed(context, '/crudAdmin');
+                      },
                     ),
                   ),
                   const Center(
