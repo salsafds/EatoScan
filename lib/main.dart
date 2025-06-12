@@ -24,7 +24,7 @@ void main() async {
     // Web: Tidak pakai path_provider
     Hive.registerAdapter(UserModelAdapter());
     Hive.registerAdapter(ProdukModelAdapter());
-
+    await Hive.initFlutter();
     await Hive.openBox('eatoscanBox');
     await Hive.openBox<UserModel>('users');
     await Hive.openBox<ProdukModel>('produk');

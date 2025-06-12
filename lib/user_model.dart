@@ -13,6 +13,9 @@ class UserModel extends HiveObject {
   @HiveField(2)
   String password;
 
+  @HiveField(6)
+  String? telepon;
+
   @HiveField(3)
   int? usia;
 

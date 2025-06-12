@@ -218,6 +218,7 @@ class _LandingPageState extends State<LandingPage> {
                 builder: (context) => AlertDialog(
                   title: Text('Hasil Scan'),
                   content: Text(
+                    // TODO nambahin route ke detail produk berdasarkan kode
                     matchedProduct.nama == 'Tidak ditemukan'
                         ? 'Produk tidak ditemukan dalam database.'
                         : 'Produk: ${matchedProduct.nama}\nRisiko: ${matchedProduct.risiko}',

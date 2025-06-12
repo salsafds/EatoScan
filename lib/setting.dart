@@ -31,26 +31,29 @@ class _SettingPageState extends State<SettingPage> {
 
   Future<void> _loadProfileData() async {
     final prefs = await SharedPreferences.getInstance();
-    final box = Hive.box('user');
+    final box = Hive.box('eatoscanBox');
     
     final currentUser = box.get('loggedInUser');
-    final name = box.get('user_name_$currentUser');
-    final email = box.get('user_email_$currentUser');
+    final name = box.get('user_name_$currentUser') ?? 'Guest';
+    final email = box.get('user_email_$currentUser') ?? 'guest@example.com';
     final imagePath = prefs.getString('profile_picture');
 
-      // setState(() {
-      //   _userName = name;
-      //   _userEmail = email;
-      //   _profileImage = imagePath != null ? File(imagePath) : null;
-      // });
+      setState(() {
+        _userName = name;
+        _userEmail = email;
+        if (imagePath != null && File(imagePath).existsSync()) {
+          _profileImage = File(imagePath);
+        }
+        // _profileImage = imagePath != null ? File(imagePath) : null;
+      });
 
-    setState(() {
-      if (imagePath != null && File(imagePath).existsSync()) {
-        _profileImage = File(imagePath);
-      }
-      _userName = name;
-      _userEmail = email;
-    });
+    // setState(() {
+    //   if (imagePath != null && File(imagePath).existsSync()) {
+    //     _profileImage = File(imagePath);
+    //   }
+    //   _userName = name;
+    //   _userEmail = email;
+    // });
   }
 
   Future<void> _navigateToEditProfile() async {
