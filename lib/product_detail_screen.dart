@@ -316,25 +316,29 @@ class ProductDetailScreen extends StatelessWidget {
                       // Product name and category
                       Padding(
                         padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Text(
-                              product.nama.isNotEmpty ? product.nama : 'Produk Tidak Ditemukan',
-                              style: const TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
+                        child: Center( // Tambahkan Center widget
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min, // Tambahkan ini
+                            children: [
+                              Text(
+                                product.nama.isNotEmpty ? product.nama : 'Produk Tidak Ditemukan',
+                                style: const TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                textAlign: TextAlign.center,
                               ),
-                              textAlign: TextAlign.center,
-                            ),
-                            Text(
-                              product.tambahan.isNotEmpty ? product.tambahan : 'Kategori tidak tersedia',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey[600],
+                              const SizedBox(height: 4), // Tambahkan spacing
+                              Text(
+                                product.tambahan.isNotEmpty ? product.tambahan : 'Kategori tidak tersedia',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.grey[600],
+                                ),
+                                textAlign: TextAlign.center,
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                       
