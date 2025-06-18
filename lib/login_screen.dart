@@ -41,8 +41,8 @@ class _LoginScreenState extends State<LoginScreen> {
         final box = Hive.box('eatoscanBox');
         await box.put('loggedInUser', username);
         await box.put('isLoggedIn', true);
-        // await box.put('user_name_$username', name);
-        // await box.put('user_email_$username', email);
+        await box.put('user_name_$username', user.username);
+        await box.put('user_email_$username', user.email);
 
         if (!mounted) return;
         Navigator.pushReplacementNamed(context, '/landingPage', arguments: username);

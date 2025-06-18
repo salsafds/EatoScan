@@ -292,7 +292,7 @@ class _LandingPageState extends State<LandingPage> {
                   icon: Icons.camera_alt,
                 ),
                 _buildSlide(
-                  title: 'Gli Lebih Transparan',
+                  title: 'Gizi Lebih Transparan',
                   subtitle:
                       'Eatoscan bantu kamu cek gizi, komposisi, dan lainnya. Yuk jadi lebih bijak!',
                   icon: Icons.info_outline,

@@ -7,7 +7,7 @@ import 'edit_riwayat_kesehatan.dart';
 
 void main() {
   runApp(MaterialApp(
-    home: SettingPage(), // ganti dengan nama widget utama yang ada di file ini
+    home: SettingPage(),
   ));
 }
 
@@ -20,8 +20,10 @@ class SettingPage extends StatefulWidget {
 
 class _SettingPageState extends State<SettingPage> {
   File? _profileImage;
-  String _userName = 'Guest';
-  String _userEmail = 'guest@example.com';
+  String _userName = 'Loading...';
+  String _userEmail = 'Loading...';
+  bool _isLoggedIn = false;
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -30,30 +32,97 @@ class _SettingPageState extends State<SettingPage> {
   }
 
   Future<void> _loadProfileData() async {
-    final prefs = await SharedPreferences.getInstance();
-    final box = Hive.box('user');
-    
-    final currentUser = box.get('loggedInUser');
-    final name = box.get('user_name_$currentUser');
-    final email = box.get('user_email_$currentUser');
-    final imagePath = prefs.getString('profile_picture');
-
-      // setState(() {
-      //   _userName = name;
-      //   _userEmail = email;
-      //   _profileImage = imagePath != null ? File(imagePath) : null;
-      // });
-
-    setState(() {
-      if (imagePath != null && File(imagePath).existsSync()) {
-        _profileImage = File(imagePath);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final box = Hive.box('eatoscanBox');
+      
+      // Cek status login
+      _isLoggedIn = box.get('isLoggedIn', defaultValue: false);
+      final currentUser = box.get('loggedInUser');
+      
+      print('Status login: $_isLoggedIn');
+      print('Current user: $currentUser');
+      
+      if (_isLoggedIn && currentUser != null) {
+        // Ambil data user dari berbagai sumber
+        String? userName;
+        String? userEmail;
+        
+        // Coba ambil dari current_user_data (data lengkap)
+        final currentUserData = box.get('current_user_data');
+        if (currentUserData != null) {
+          userName = currentUserData['name'] ?? currentUserData['username'];
+          userEmail = currentUserData['email'];
+          print('Data dari current_user_data: $currentUserData');
+        }
+        
+        // Fallback: ambil dari key terpisah
+        if (userName == null || userEmail == null) {
+          userName = box.get('user_name_$currentUser') ?? 
+                   prefs.getString('current_name');
+          userEmail = box.get('user_email_$currentUser') ?? 
+                     prefs.getString('current_email');
+          print('Data dari key terpisah: name=$userName, email=$userEmail');
+        }
+        
+        // Fallback terakhir: ambil langsung dari user box
+        if (userName == null || userEmail == null) {
+          try {
+            final userBox = Hive.box('users');
+            final userData = userBox.get(currentUser);
+            if (userData != null) {
+              userName = userData['name'] ?? userData['username'] ?? currentUser;
+              userEmail = userData['email'] ?? 'No email';
+              print('Data dari user box: $userData');
+            }
+          } catch (e) {
+            print('Error mengakses user box: $e');
+          }
+        }
+        
+        setState(() {
+          _userName = userName ?? currentUser;
+          _userEmail = userEmail ?? 'No email available';
+        });
+        
+        // Load profile image
+        final imagePath = prefs.getString('profile_picture_$currentUser') ?? 
+                         prefs.getString('profile_picture');
+        
+        if (imagePath != null && File(imagePath).existsSync()) {
+          setState(() {
+            _profileImage = File(imagePath);
+          });
+        }
+        
+      } else {
+        // User tidak login
+        setState(() {
+          _userName = 'Guest';
+          _userEmail = 'Silakan login untuk melihat profil';
+          _isLoggedIn = false;
+        });
       }
-      _userName = name;
-      _userEmail = email;
-    });
+      
+    } catch (e) {
+      print('Error loading profile data: $e');
+      setState(() {
+        _userName = 'Error loading data';
+        _userEmail = 'Please try again';
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   Future<void> _navigateToEditProfile() async {
+    if (!_isLoggedIn) {
+      _showMessage('Silakan login terlebih dahulu');
+      return;
+    }
+    
     await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => EditProfilPage()),
@@ -61,7 +130,18 @@ class _SettingPageState extends State<SettingPage> {
     _loadProfileData(); // refresh data
   }
 
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
   void _showLogoutDialog() {
+    if (!_isLoggedIn) {
+      Navigator.pushNamed(context, '/login');
+      return;
+    }
+    
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -95,12 +175,24 @@ class _SettingPageState extends State<SettingPage> {
                     ),
                     onPressed: () async {
                       Navigator.of(context).pop();
+                      
+                      // Clear login data
+                      final box = Hive.box('eatoscanBox');
+                      await box.delete('loggedInUser');
+                      await box.delete('current_user_data');
+                      await box.put('isLoggedIn', false);
+                      
+                      // Clear SharedPreferences session data
                       SharedPreferences prefs = await SharedPreferences.getInstance();
-                      await prefs.clear();
-                        final box = Hive.box('eatoscanBox');
-                        await box.delete('loggedInUser');
-                        await box.put('isLoggedIn', false);
-                        Navigator.pushNamedAndRemoveUntil(context, '/landingPage',(Route<dynamic> route) => false,);
+                      await prefs.remove('current_username');
+                      await prefs.remove('current_name');
+                      await prefs.remove('current_email');
+                      
+                      Navigator.pushNamedAndRemoveUntil(
+                        context, 
+                        '/landingPage',
+                        (Route<dynamic> route) => false,
+                      );
                     },
                     child: Text('Ya', style: TextStyle(color: Colors.white)),
                   ),
@@ -153,7 +245,7 @@ class _SettingPageState extends State<SettingPage> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 48), // dummy space
+                  const SizedBox(width: 48),
                 ],
               ),
             ),
@@ -163,60 +255,87 @@ class _SettingPageState extends State<SettingPage> {
                   color: Color(0xFFF9FAFB),
                   borderRadius: BorderRadius.vertical(top: Radius.circular(40)),
                 ),
-                child: Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(top: 24, bottom: 24),
-                      child: Column(
+                child: _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : Column(
                         children: [
-                          CircleAvatar(
-                            radius: 60,
-                            backgroundImage: _profileImage != null
-                                ? FileImage(_profileImage!)
-                                : const AssetImage('assets/images/default_profil.jpg')
-                                    as ImageProvider,
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            _userName,
-                            style: const TextStyle(
-                              color: Colors.black,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
+                          Padding(
+                            padding: const EdgeInsets.only(top: 24, bottom: 24),
+                            child: Column(
+                              children: [
+                                CircleAvatar(
+                                  radius: 60,
+                                  backgroundImage: _profileImage != null
+                                      ? FileImage(_profileImage!)
+                                      : const AssetImage('assets/images/default_profil.jpg')
+                                          as ImageProvider,
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  _userName,
+                                  style: const TextStyle(
+                                    color: Colors.black,
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  _userEmail,
+                                  style: const TextStyle(color: Colors.black54),
+                                ),
+                                // Status indicator
+                                Container(
+                                  margin: const EdgeInsets.only(top: 8),
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: _isLoggedIn ? Colors.green[100] : Colors.orange[100],
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    _isLoggedIn ? 'Logged In' : 'Guest Mode',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: _isLoggedIn ? Colors.green[700] : Colors.orange[700],
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          Text(
-                            _userEmail,
-                            style: const TextStyle(color: Colors.black54),
+                          const Divider(thickness: 1),
+                          Expanded(
+                            child: ListView(
+                              children: [
+                                _buildMenuItem(Icons.person, 'Edit Profil', _navigateToEditProfile),
+                                _buildMenuItem(Icons.favorite_border, 'Edit Riwayat Kesehatan', () {
+                                  if (!_isLoggedIn) {
+                                    _showMessage('Silakan login terlebih dahulu');
+                                    return;
+                                  }
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => const EditRiwayatKesehatanPage()),
+                                  );
+                                }),
+                                _buildMenuItem(
+                                  _isLoggedIn ? Icons.logout : Icons.login, 
+                                  _isLoggedIn ? 'Keluar' : 'Masuk', 
+                                  _showLogoutDialog
+                                ),
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: Image.asset(
+                              'assets/images/eatoscan1.png',
+                              height: 40,
+                            ),
                           ),
                         ],
                       ),
-                    ),
-                    const Divider(thickness: 1),
-                    Expanded(
-                      child: ListView(
-                        children: [
-                          _buildMenuItem(Icons.person, 'Edit Profil', _navigateToEditProfile),
-                          _buildMenuItem(Icons.favorite_border, 'Edit Riwayat Kesehatan', () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => const EditRiwayatKesehatanPage()),
-                            );
-                          }),
-                          _buildMenuItem(Icons.logout, 'Keluar', _showLogoutDialog),
-                        ],
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: Image.asset(
-                        'assets/images/eatoscan1.png',
-                        height: 40,
-                      ),
-                    ),
-                  ],
-                ),
               ),
             ),
           ],

@@ -656,6 +656,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                 : recommendedProduct.preferensiNutrisi['bebas_gluten'] == true
                                   ? 'Bebas Gluten'
                                   : 'Sehat',
+                              recommendedProduct.gambarPath, // Tambahkan parameter gambar
                             );
                           }).toList(),
                         ),
@@ -1003,77 +1004,187 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     );
   }
 
-  Widget _buildRecommendationCard(String name, String tag) {
-    return Container(
-      width: 150,
-      margin: const EdgeInsets.only(right: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
-            spreadRadius: 1,
-            blurRadius: 4,
-            offset: const Offset(0, 2),
+  // Widget _buildRecommendationCard(String name, String tag,  String? imagePath) {
+  //   return Container(
+  //     width: 150,
+  //     margin: const EdgeInsets.only(right: 12),
+  //     decoration: BoxDecoration(
+  //       color: Colors.white,
+  //       borderRadius: BorderRadius.circular(8),
+  //       boxShadow: [
+  //         BoxShadow(
+  //           color: Colors.grey.withOpacity(0.2),
+  //           spreadRadius: 1,
+  //           blurRadius: 4,
+  //           offset: const Offset(0, 2),
+  //         ),
+  //       ],
+  //     ),
+  //     child: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         Container(
+  //           height: 100,
+  //           decoration: BoxDecoration(
+  //             color: Colors.grey[200],
+  //             borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+  //           ),
+  //           child: const Center(
+  //             child: Icon(Icons.image, size: 40, color: Colors.grey),
+  //           ),
+  //         ),
+  //         Padding(
+  //           padding: const EdgeInsets.all(8),
+  //           child: Column(
+  //             crossAxisAlignment: CrossAxisAlignment.start,
+  //             children: [
+  //               Text(
+  //                 name,
+  //                 style: const TextStyle(
+  //                   fontSize: 12,
+  //                   fontWeight: FontWeight.bold,
+  //                 ),
+  //                 maxLines: 2,
+  //                 overflow: TextOverflow.ellipsis,
+  //               ),
+  //               const SizedBox(height: 4),
+  //               Row(
+  //                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //                 children: [
+  //                   Container(
+  //                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+  //                     decoration: BoxDecoration(
+  //                       color: Colors.green,
+  //                       borderRadius: BorderRadius.circular(4),
+  //                     ),
+  //                     child: Text(
+  //                       tag,
+  //                       style: const TextStyle(
+  //                         color: Colors.white,
+  //                         fontSize: 10,
+  //                       ),
+  //                     ),
+  //                   ),
+  //                   const Icon(Icons.favorite_border, size: 16),
+  //                 ],
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
+
+  Widget _buildRecommendationCard(String name, String tag, String? imagePath) {
+  return Container(
+    width: 150,
+    margin: const EdgeInsets.only(right: 12),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(8),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.grey.withOpacity(0.2),
+          spreadRadius: 1,
+          blurRadius: 4,
+          offset: const Offset(0, 2),
+        ),
+      ],
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          height: 100,
+          decoration: BoxDecoration(
+            color: Colors.grey[200],
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            height: 100,
-            decoration: BoxDecoration(
-              color: Colors.grey[200],
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
-            ),
-            child: const Center(
-              child: Icon(Icons.image, size: 40, color: Colors.grey),
-            ),
+          child: ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+            child: _buildProductImage(imagePath),
           ),
-          Padding(
-            padding: const EdgeInsets.all(8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+        ),
+        Padding(
+          padding: const EdgeInsets.all(8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                name,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
                 ),
-                const SizedBox(height: 4),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Colors.green,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        tag,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                        ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 4),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.green,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      tag,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
                       ),
                     ),
-                    const Icon(Icons.favorite_border, size: 16),
-                  ],
-                ),
-              ],
-            ),
+                  ),
+                  const Icon(Icons.favorite_border, size: 16),
+                ],
+              ),
+            ],
           ),
-        ],
-      ),
-    );
+        ),
+      ],
+    ),
+  );
+}
+
+// Widget helper untuk menampilkan gambar produk
+Widget _buildProductImage(String? imagePath) {
+  if (imagePath != null && imagePath.isNotEmpty) {
+    // Cek apakah file gambar ada
+    final file = File(imagePath);
+    if (file.existsSync()) {
+      return Image.file(
+        file,
+        width: double.infinity,
+        height: 100,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return _buildPlaceholderImage();
+        },
+      );
+    }
   }
+  
+  // Tampilkan placeholder jika tidak ada gambar
+  return _buildPlaceholderImage();
+}
+
+Widget _buildPlaceholderImage() {
+  return Container(
+    width: double.infinity,
+    height: 100,
+    color: Colors.grey[200],
+    child: const Center(
+      child: Icon(
+        Icons.image,
+        size: 40,
+        color: Colors.grey,
+      ),
+    ),
+  );
+}
 
   Widget _buildPreferenceItem(String label, bool isChecked) {
     return Padding(

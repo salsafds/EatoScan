@@ -31,6 +31,12 @@ class ProdukModel extends HiveObject {
   @HiveField(8)
   String? gambarPath;
 
+  @HiveField(9)
+  String? unitTakaranKemasan; // Unit untuk takaran kemasan
+
+  @HiveField(10)
+  List<Map<String, dynamic>>? nutrisiDetail; // Detail nutrisi dengan unit
+
   ProdukModel({
     required this.nama,
     required this.kode,
@@ -46,5 +52,7 @@ class ProdukModel extends HiveObject {
     this.takaranKemasan = 0.0,
     this.sajianPerKemasan = 0.0,
     this.gambarPath,
+    this.unitTakaranKemasan = 'g',
+    this.nutrisiDetail,
   });
 }

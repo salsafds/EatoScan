@@ -34,6 +34,10 @@ class _PenyakitFormPageState extends State<PenyakitFormPage> {
 
   List<Map<String, dynamic>> _hindariBahan = [];
   int? _selectedIndex;
+  
+  // Tambahkan variabel untuk dropdown unit
+  String _selectedUnit = 'g';
+  final List<String> _availableUnits = ['g', 'mg', 'kkal', 'ml', '%', 'IU'];
 
   @override
   void initState() {
@@ -85,6 +89,7 @@ class _PenyakitFormPageState extends State<PenyakitFormPage> {
       _bahanController.clear();
       _batasController.clear();
       _hindariBahan.clear();
+      _selectedUnit = 'g'; // Reset unit ke default
     });
   }
 
@@ -96,10 +101,12 @@ class _PenyakitFormPageState extends State<PenyakitFormPage> {
           _hindariBahan.add({
             'nama': _bahanController.text,
             'batas_maksimal': batas,
-            'unit': _getDefaultUnit(_bahanController.text),
+            'unit': _selectedUnit, // Gunakan unit yang dipilih user
           });
           _bahanController.clear();
           _batasController.clear();
+          // Reset unit ke default atau biarkan tetap sesuai pilihan terakhir
+          // _selectedUnit = 'g'; // Uncomment jika ingin reset ke default
         });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -119,7 +126,8 @@ class _PenyakitFormPageState extends State<PenyakitFormPage> {
     }
   }
 
-  String _getDefaultUnit(String bahan) {
+  // Method ini masih bisa digunakan untuk memberikan saran unit otomatis
+  String _getSuggestedUnit(String bahan) {
     final lowerBahan = bahan.toLowerCase();
     if (lowerBahan.contains('gula') || lowerBahan.contains('sugar') ||
         lowerBahan.contains('lemak') || lowerBahan.contains('protein') ||
@@ -132,6 +140,16 @@ class _PenyakitFormPageState extends State<PenyakitFormPage> {
       return 'kkal';
     } else {
       return 'g';
+    }
+  }
+
+  // Method untuk auto-suggest unit berdasarkan nama bahan
+  void _autoSuggestUnit() {
+    if (_bahanController.text.isNotEmpty) {
+      final suggestedUnit = _getSuggestedUnit(_bahanController.text);
+      setState(() {
+        _selectedUnit = suggestedUnit;
+      });
     }
   }
 
@@ -430,7 +448,7 @@ class _PenyakitFormPageState extends State<PenyakitFormPage> {
                                         );
                                       }),
 
-                                      // Form tambah bahan baru
+                                      // Form tambah bahan baru dengan dropdown unit
                                       Container(
                                         padding: const EdgeInsets.all(12),
                                         decoration: BoxDecoration(
@@ -440,39 +458,119 @@ class _PenyakitFormPageState extends State<PenyakitFormPage> {
                                         ),
                                         child: Column(
                                           children: [
-                                            TextField(
-                                              controller: _bahanController,
-                                              style: const TextStyle(fontSize: 12),
-                                              decoration: InputDecoration(
-                                                hintText: 'Nama bahan (contoh: Gula, Natrium)',
-                                                border: OutlineInputBorder(
-                                                  borderRadius: BorderRadius.circular(10),
+                                            // Input nama bahan dengan tombol auto-suggest
+                                            Row(
+                                              children: [
+                                                Expanded(
+                                                  child: TextField(
+                                                    controller: _bahanController,
+                                                    style: const TextStyle(fontSize: 12),
+                                                    decoration: InputDecoration(
+                                                      hintText: 'Nama bahan (contoh: Gula, Natrium)',
+                                                      border: OutlineInputBorder(
+                                                        borderRadius: BorderRadius.circular(10),
+                                                      ),
+                                                      isDense: true,
+                                                      contentPadding: const EdgeInsets.symmetric(
+                                                        horizontal: 12,
+                                                        vertical: 10,
+                                                      ),
+                                                    ),
+                                                  ),
                                                 ),
-                                                isDense: true,
-                                                contentPadding: const EdgeInsets.symmetric(
-                                                  horizontal: 12,
-                                                  vertical: 10,
+                                                const SizedBox(width: 8),
+                                                IconButton(
+                                                  onPressed: _autoSuggestUnit,
+                                                  icon: const Icon(Icons.auto_fix_high, size: 20),
+                                                  tooltip: 'Auto-suggest unit',
+                                                  style: IconButton.styleFrom(
+                                                    backgroundColor: Colors.orange[100],
+                                                    foregroundColor: Colors.orange[700],
+                                                  ),
                                                 ),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 8),
+                                            
+                                            // Row untuk input batas dan dropdown unit
+                                            Row(
+                                              children: [
+                                                Expanded(
+                                                  flex: 2,
+                                                  child: TextField(
+                                                    controller: _batasController,
+                                                    keyboardType: TextInputType.numberWithOptions(decimal: true),
+                                                    style: const TextStyle(fontSize: 12),
+                                                    decoration: InputDecoration(
+                                                      hintText: 'Batas maksimal',
+                                                      border: OutlineInputBorder(
+                                                        borderRadius: BorderRadius.circular(10),
+                                                      ),
+                                                      isDense: true,
+                                                      contentPadding: const EdgeInsets.symmetric(
+                                                        horizontal: 12,
+                                                        vertical: 10,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Expanded(
+                                                  flex: 1,
+                                                  child: Container(
+                                                    decoration: BoxDecoration(
+                                                      border: Border.all(color: Colors.grey),
+                                                      borderRadius: BorderRadius.circular(10),
+                                                    ),
+                                                    child: DropdownButtonHideUnderline(
+                                                      child: DropdownButton<String>(
+                                                        value: _selectedUnit,
+                                                        isExpanded: true,
+                                                        style: const TextStyle(fontSize: 12, color: Colors.black),
+                                                        items: _availableUnits.map((String unit) {
+                                                          return DropdownMenuItem<String>(
+                                                            value: unit,
+                                                            child: Padding(
+                                                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                                                              child: Text(unit),
+                                                            ),
+                                                          );
+                                                        }).toList(),
+                                                        onChanged: (String? newValue) {
+                                                          if (newValue != null) {
+                                                            setState(() {
+                                                              _selectedUnit = newValue;
+                                                            });
+                                                          }
+                                                        },
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 8),
+                                            
+                                            // Info unit yang dipilih
+                                            Container(
+                                              width: double.infinity,
+                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                              decoration: BoxDecoration(
+                                                color: Colors.grey[100],
+                                                borderRadius: BorderRadius.circular(6),
+                                              ),
+                                              child: Text(
+                                                'Unit terpilih: $_selectedUnit ${_getUnitDescription(_selectedUnit)}',
+                                                style: TextStyle(
+                                                  fontSize: 10,
+                                                  color: Colors.grey[600],
+                                                  fontStyle: FontStyle.italic,
+                                                ),
+                                                textAlign: TextAlign.center,
                                               ),
                                             ),
                                             const SizedBox(height: 8),
-                                            TextField(
-                                              controller: _batasController,
-                                              keyboardType: TextInputType.numberWithOptions(decimal: true),
-                                              style: const TextStyle(fontSize: 12),
-                                              decoration: InputDecoration(
-                                                hintText: 'Batas maksimal (contoh: 10)',
-                                                border: OutlineInputBorder(
-                                                  borderRadius: BorderRadius.circular(10),
-                                                ),
-                                                isDense: true,
-                                                contentPadding: const EdgeInsets.symmetric(
-                                                  horizontal: 12,
-                                                  vertical: 10,
-                                                ),
-                                              ),
-                                            ),
-                                            const SizedBox(height: 8),
+                                            
                                             SizedBox(
                                               width: double.infinity,
                                               child: ElevatedButton.icon(
@@ -673,6 +771,26 @@ class _PenyakitFormPageState extends State<PenyakitFormPage> {
         ),
       ),
     );
+  }
+
+  // Method untuk memberikan deskripsi unit
+  String _getUnitDescription(String unit) {
+    switch (unit) {
+      case 'g':
+        return '(gram)';
+      case 'mg':
+        return '(miligram)';
+      case 'kkal':
+        return '(kilokalori)';
+      case 'ml':
+        return '(mililiter)';
+      case '%':
+        return '(persen)';
+      case 'IU':
+        return '(International Unit)';
+      default:
+        return '';
+    }
   }
 
   Widget _buildActionButton(String text, Color color, VoidCallback onPressed) {
