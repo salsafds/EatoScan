@@ -28,9 +28,11 @@ class PenyakitFormPage extends StatefulWidget {
 class _PenyakitFormPageState extends State<PenyakitFormPage> {
   final TextEditingController _namaController = TextEditingController();
   final TextEditingController _deskripsiController = TextEditingController();
+  final TextEditingController _keteranganController = TextEditingController();
   final TextEditingController _bahanController = TextEditingController();
+  final TextEditingController _batasController = TextEditingController();
 
-  List<String> _hindariBahan = [];
+  List<Map<String, dynamic>> _hindariBahan = [];
   int? _selectedIndex;
 
   @override
@@ -39,7 +41,6 @@ class _PenyakitFormPageState extends State<PenyakitFormPage> {
     _loadPenyakitData();
   }
 
-  // Memuat data penyakit dari SharedPreferences
   Future<void> _loadPenyakitData() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -60,7 +61,6 @@ class _PenyakitFormPageState extends State<PenyakitFormPage> {
     }
   }
 
-  // Menyimpan data penyakit ke SharedPreferences
   Future<void> _savePenyakitData() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -76,23 +76,62 @@ class _PenyakitFormPageState extends State<PenyakitFormPage> {
     }
   }
 
-  // Fungsi untuk reset semua input form
   void _resetForm() {
     setState(() {
       _selectedIndex = null;
       _namaController.clear();
       _deskripsiController.clear();
+      _keteranganController.clear();
       _bahanController.clear();
+      _batasController.clear();
       _hindariBahan.clear();
     });
   }
 
   void _tambahBahan() {
-    if (_bahanController.text.isNotEmpty) {
-      setState(() {
-        _hindariBahan.add(_bahanController.text);
-        _bahanController.clear();
-      });
+    if (_bahanController.text.isNotEmpty && _batasController.text.isNotEmpty) {
+      final batas = double.tryParse(_batasController.text);
+      if (batas != null) {
+        setState(() {
+          _hindariBahan.add({
+            'nama': _bahanController.text,
+            'batas_maksimal': batas,
+            'unit': _getDefaultUnit(_bahanController.text),
+          });
+          _bahanController.clear();
+          _batasController.clear();
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Batas maksimal harus berupa angka'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Nama bahan dan batas maksimal harus diisi'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  String _getDefaultUnit(String bahan) {
+    final lowerBahan = bahan.toLowerCase();
+    if (lowerBahan.contains('gula') || lowerBahan.contains('sugar') ||
+        lowerBahan.contains('lemak') || lowerBahan.contains('protein') ||
+        lowerBahan.contains('karbohidrat')) {
+      return 'g';
+    } else if (lowerBahan.contains('natrium') || lowerBahan.contains('sodium') ||
+               lowerBahan.contains('kolesterol') || lowerBahan.contains('vitamin')) {
+      return 'mg';
+    } else if (lowerBahan.contains('kalori') || lowerBahan.contains('energi')) {
+      return 'kkal';
+    } else {
+      return 'g';
     }
   }
 
@@ -130,18 +169,19 @@ class _PenyakitFormPageState extends State<PenyakitFormPage> {
     }
 
     setState(() {
+      final penyakitData = {
+        'nama': _namaController.text,
+        'deskripsi': _deskripsiController.text,
+        'keterangan': _keteranganController.text,
+        'hindariBahan': List.from(_hindariBahan),
+        'created_at': DateTime.now().toIso8601String(),
+      };
+
       if (_selectedIndex != null) {
-        PenyakitFormPage.dataPenyakit[_selectedIndex!] = {
-          'nama': _namaController.text,
-          'deskripsi': _deskripsiController.text,
-          'hindariBahan': List.from(_hindariBahan),
-        };
+        penyakitData['updated_at'] = DateTime.now().toIso8601String();
+        PenyakitFormPage.dataPenyakit[_selectedIndex!] = penyakitData;
       } else {
-        PenyakitFormPage.dataPenyakit.add({
-          'nama': _namaController.text,
-          'deskripsi': _deskripsiController.text,
-          'hindariBahan': List.from(_hindariBahan),
-        });
+        PenyakitFormPage.dataPenyakit.add(penyakitData);
       }
     });
 
@@ -154,6 +194,8 @@ class _PenyakitFormPageState extends State<PenyakitFormPage> {
         duration: Duration(seconds: 3),
       ),
     );
+    
+    _resetForm();
   }
 
   void _ubah() {
@@ -162,7 +204,8 @@ class _PenyakitFormPageState extends State<PenyakitFormPage> {
         final data = PenyakitFormPage.dataPenyakit[_selectedIndex!];
         _namaController.text = data['nama'];
         _deskripsiController.text = data['deskripsi'];
-        _hindariBahan = List.from(data['hindariBahan']);
+        _keteranganController.text = data['keterangan'] ?? '';
+        _hindariBahan = List<Map<String, dynamic>>.from(data['hindariBahan']);
       });
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -179,41 +222,40 @@ class _PenyakitFormPageState extends State<PenyakitFormPage> {
     if (_selectedIndex != null) {
       showDialog(
         context: context,
-        builder:
-            (context) => AlertDialog(
-              title: const Text('Konfirmasi Hapus'),
-              content: Text(
-                'Apakah Anda yakin ingin menghapus data penyakit "${PenyakitFormPage.dataPenyakit[_selectedIndex!]['nama']}"?',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(), // Batal
-                  child: const Text('Batal'),
-                ),
-                TextButton(
-                  onPressed: () {
-                    setState(() {
-                      PenyakitFormPage.dataPenyakit.removeAt(_selectedIndex!);
-                      _selectedIndex = null;
-                      _resetForm();
-                    });
-                    _savePenyakitData();
-                    Navigator.of(context).pop(); // Tutup dialog
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Sukses: Data berhasil dihapus.'),
-                        backgroundColor: Colors.green,
-                        duration: Duration(seconds: 3),
-                      ),
-                    );
-                  },
-                  child: const Text(
-                    'Ya, Hapus',
-                    style: TextStyle(color: Colors.red),
-                  ),
-                ),
-              ],
+        builder: (context) => AlertDialog(
+          title: const Text('Konfirmasi Hapus'),
+          content: Text(
+            'Apakah Anda yakin ingin menghapus data penyakit "${PenyakitFormPage.dataPenyakit[_selectedIndex!]['nama']}"?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Batal'),
             ),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  PenyakitFormPage.dataPenyakit.removeAt(_selectedIndex!);
+                  _selectedIndex = null;
+                  _resetForm();
+                });
+                _savePenyakitData();
+                Navigator.of(context).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Sukses: Data berhasil dihapus.'),
+                    backgroundColor: Colors.green,
+                    duration: Duration(seconds: 3),
+                  ),
+                );
+              },
+              child: const Text(
+                'Ya, Hapus',
+                style: TextStyle(color: Colors.red),
+              ),
+            ),
+          ],
+        ),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -243,20 +285,16 @@ class _PenyakitFormPageState extends State<PenyakitFormPage> {
                     child: IconButton(
                       icon: const Icon(Icons.arrow_back, color: Colors.white),
                       onPressed: () {
-                        print("Back button ditekan");
                         _resetForm();
-                        Navigator.of(
-                          context,
-                          rootNavigator: true,
-                        ).pushNamed('/dashboard');
+                        Navigator.of(context, rootNavigator: true).pushNamed('/dashboard');
                       },
                     ),
                   ),
                   const Center(
                     child: Text(
-                      'EatoScan',
+                      'EatoScan - Data Penyakit',
                       style: TextStyle(
-                        fontSize: 26,
+                        fontSize: 22,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
@@ -281,29 +319,49 @@ class _PenyakitFormPageState extends State<PenyakitFormPage> {
                           children: [
                             const Center(
                               child: Text(
-                                'Data Penyakit',
+                                'Manajemen Data Penyakit',
                                 style: TextStyle(
-                                  fontSize: 32,
+                                  fontSize: 24,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ),
+                            const SizedBox(height: 8),
+                            const Center(
+                              child: Text(
+                                'Kelola data penyakit dan batas nutrisi untuk personalisasi peringatan',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
                             const SizedBox(height: 24),
 
-                            // Nama Penyakit
+                            // Form Fields
                             FormFieldWithLabel(
                               label: 'Nama Penyakit',
                               controller: _namaController,
+                              hint: 'Contoh: Diabetes, Hipertensi',
                             ),
 
-                            // Deskripsi Penyakit
                             FormFieldWithLabel(
-                              label: 'Deskripsi Penyakit',
+                              label: 'Deskripsi',
                               controller: _deskripsiController,
-                              maxLines: 4,
+                              maxLines: 3,
+                              hint: 'Deskripsi singkat tentang penyakit',
                             ),
 
-                            // Hindari Bahan Section
+                            FormFieldWithLabel(
+                              label: 'Keterangan',
+                              controller: _keteranganController,
+                              maxLines: 2,
+                              hint: 'Keterangan tambahan (opsional)',
+                            ),
+
+                            // Bahan yang Dihindari Section
                             const SizedBox(height: 8),
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -312,89 +370,127 @@ class _PenyakitFormPageState extends State<PenyakitFormPage> {
                                   width: 120,
                                   child: Padding(
                                     padding: EdgeInsets.only(top: 12),
-                                    child: Text('Hindari Bahan'),
+                                    child: Text(
+                                      'Bahan Dihindari',
+                                      style: TextStyle(fontWeight: FontWeight.w500),
+                                    ),
                                   ),
                                 ),
                                 Expanded(
                                   child: Column(
                                     children: [
-                                      // List of ingredients to avoid
-                                      ..._hindariBahan.asMap().entries.map((
-                                        entry,
-                                      ) {
+                                      // List bahan yang sudah ditambahkan
+                                      ..._hindariBahan.asMap().entries.map((entry) {
                                         int index = entry.key;
-                                        String bahan = entry.value;
+                                        Map<String, dynamic> bahan = entry.value;
                                         return Container(
-                                          margin: const EdgeInsets.only(
-                                            bottom: 8,
-                                          ),
+                                          margin: const EdgeInsets.only(bottom: 8),
                                           child: Row(
                                             children: [
                                               Expanded(
                                                 child: Container(
-                                                  padding:
-                                                      const EdgeInsets.symmetric(
-                                                        horizontal: 12,
-                                                        vertical: 14,
-                                                      ),
-                                                  decoration: BoxDecoration(
-                                                    border: Border.all(
-                                                      color: Colors.grey,
-                                                    ),
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          15,
-                                                        ),
+                                                  padding: const EdgeInsets.symmetric(
+                                                    horizontal: 12,
+                                                    vertical: 12,
                                                   ),
-                                                  child: Text(
-                                                    bahan,
-                                                    style: const TextStyle(
-                                                      fontSize: 12,
-                                                    ),
+                                                  decoration: BoxDecoration(
+                                                    border: Border.all(color: Colors.grey),
+                                                    borderRadius: BorderRadius.circular(15),
+                                                    color: Colors.grey[50],
+                                                  ),
+                                                  child: Column(
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    children: [
+                                                      Text(
+                                                        bahan['nama'],
+                                                        style: const TextStyle(
+                                                          fontSize: 12,
+                                                          fontWeight: FontWeight.bold,
+                                                        ),
+                                                      ),
+                                                      const SizedBox(height: 2),
+                                                      Text(
+                                                        'Batas: ${bahan['batas_maksimal']} ${bahan['unit']}',
+                                                        style: TextStyle(
+                                                          fontSize: 10,
+                                                          color: Colors.grey[600],
+                                                        ),
+                                                      ),
+                                                    ],
                                                   ),
                                                 ),
                                               ),
                                               const SizedBox(width: 8),
                                               IconButton(
-                                                icon: const Icon(Icons.remove),
-                                                onPressed:
-                                                    () => _hapusBahan(index),
+                                                icon: const Icon(Icons.remove_circle, color: Colors.red),
+                                                onPressed: () => _hapusBahan(index),
                                               ),
                                             ],
                                           ),
                                         );
                                       }),
 
-                                      // Add new ingredient
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: TextField(
+                                      // Form tambah bahan baru
+                                      Container(
+                                        padding: const EdgeInsets.all(12),
+                                        decoration: BoxDecoration(
+                                          border: Border.all(color: Colors.blue[200]!),
+                                          borderRadius: BorderRadius.circular(15),
+                                          color: Colors.blue[50],
+                                        ),
+                                        child: Column(
+                                          children: [
+                                            TextField(
                                               controller: _bahanController,
-                                              style: const TextStyle(
-                                                fontSize: 12,
-                                              ),
+                                              style: const TextStyle(fontSize: 12),
                                               decoration: InputDecoration(
-                                                hintText: 'Tambah bahan...',
+                                                hintText: 'Nama bahan (contoh: Gula, Natrium)',
                                                 border: OutlineInputBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(15),
+                                                  borderRadius: BorderRadius.circular(10),
                                                 ),
                                                 isDense: true,
-                                                contentPadding:
-                                                    const EdgeInsets.symmetric(
-                                                      horizontal: 12,
-                                                      vertical: 14,
-                                                    ),
+                                                contentPadding: const EdgeInsets.symmetric(
+                                                  horizontal: 12,
+                                                  vertical: 10,
+                                                ),
                                               ),
                                             ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          IconButton(
-                                            icon: const Icon(Icons.add),
-                                            onPressed: _tambahBahan,
-                                          ),
-                                        ],
+                                            const SizedBox(height: 8),
+                                            TextField(
+                                              controller: _batasController,
+                                              keyboardType: TextInputType.numberWithOptions(decimal: true),
+                                              style: const TextStyle(fontSize: 12),
+                                              decoration: InputDecoration(
+                                                hintText: 'Batas maksimal (contoh: 10)',
+                                                border: OutlineInputBorder(
+                                                  borderRadius: BorderRadius.circular(10),
+                                                ),
+                                                isDense: true,
+                                                contentPadding: const EdgeInsets.symmetric(
+                                                  horizontal: 12,
+                                                  vertical: 10,
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(height: 8),
+                                            SizedBox(
+                                              width: double.infinity,
+                                              child: ElevatedButton.icon(
+                                                onPressed: _tambahBahan,
+                                                icon: const Icon(Icons.add, size: 16),
+                                                label: const Text(
+                                                  'Tambah Bahan',
+                                                  style: TextStyle(fontSize: 12),
+                                                ),
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor: Colors.blue,
+                                                  foregroundColor: Colors.white,
+                                                  padding: const EdgeInsets.symmetric(vertical: 8),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -408,32 +504,16 @@ class _PenyakitFormPageState extends State<PenyakitFormPage> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               children: [
-                                _buildActionButton(
-                                  'BARU',
-                                  const Color(0xFF225840),
-                                  _baru,
-                                ),
-                                _buildActionButton(
-                                  'SIMPAN',
-                                  const Color(0xFF225840),
-                                  _simpan,
-                                ),
-                                _buildActionButton(
-                                  'UBAH',
-                                  const Color(0xFF225840),
-                                  _ubah,
-                                ),
-                                _buildActionButton(
-                                  'HAPUS',
-                                  const Color(0xFF225840),
-                                  _hapus,
-                                ),
+                                _buildActionButton('BARU', const Color(0xFF225840), _baru),
+                                _buildActionButton('SIMPAN', const Color(0xFF225840), _simpan),
+                                _buildActionButton('UBAH', const Color(0xFF225840), _ubah),
+                                _buildActionButton('HAPUS', const Color(0xFF225840), _hapus),
                               ],
                             ),
 
                             const SizedBox(height: 24),
 
-                            // Data Table Section
+                            // Data Table
                             Container(
                               height: 300,
                               decoration: BoxDecoration(
@@ -442,11 +522,8 @@ class _PenyakitFormPageState extends State<PenyakitFormPage> {
                               ),
                               child: Column(
                                 children: [
-                                  // Table Header
                                   Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 12,
-                                    ),
+                                    padding: const EdgeInsets.symmetric(vertical: 12),
                                     decoration: BoxDecoration(
                                       color: Colors.grey[100],
                                       borderRadius: const BorderRadius.only(
@@ -462,18 +539,7 @@ class _PenyakitFormPageState extends State<PenyakitFormPage> {
                                             'Nama Penyakit',
                                             style: TextStyle(
                                               fontWeight: FontWeight.bold,
-                                              fontSize: 12,
-                                            ),
-                                            textAlign: TextAlign.center,
-                                          ),
-                                        ),
-                                        Expanded(
-                                          flex: 3,
-                                          child: Text(
-                                            'Deskripsi',
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 12,
+                                              fontSize: 11,
                                             ),
                                             textAlign: TextAlign.center,
                                           ),
@@ -481,10 +547,21 @@ class _PenyakitFormPageState extends State<PenyakitFormPage> {
                                         Expanded(
                                           flex: 2,
                                           child: Text(
-                                            'Hindari Bahan',
+                                            'Deskripsi',
                                             style: TextStyle(
                                               fontWeight: FontWeight.bold,
-                                              fontSize: 12,
+                                              fontSize: 11,
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ),
+                                        Expanded(
+                                          flex: 3,
+                                          child: Text(
+                                            'Bahan & Batas',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 11,
                                             ),
                                             textAlign: TextAlign.center,
                                           ),
@@ -493,124 +570,93 @@ class _PenyakitFormPageState extends State<PenyakitFormPage> {
                                     ),
                                   ),
 
-                                  // Table Data
                                   Expanded(
-                                    child:
-                                        PenyakitFormPage.dataPenyakit.isEmpty
-                                            ? const Center(
-                                              child: Text(
-                                                'Belum ada data penyakit',
-                                                style: TextStyle(
-                                                  fontSize: 12,
-                                                  color: Colors.grey,
-                                                ),
+                                    child: PenyakitFormPage.dataPenyakit.isEmpty
+                                        ? const Center(
+                                            child: Text(
+                                              'Belum ada data penyakit',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.grey,
                                               ),
-                                            )
-                                            : ListView.builder(
-                                              itemCount:
-                                                  PenyakitFormPage
-                                                      .dataPenyakit
-                                                      .length,
-                                              itemBuilder: (context, index) {
-                                                final data =
-                                                    PenyakitFormPage
-                                                        .dataPenyakit[index];
-                                                final isSelected =
-                                                    _selectedIndex == index;
+                                            ),
+                                          )
+                                        : ListView.builder(
+                                            itemCount: PenyakitFormPage.dataPenyakit.length,
+                                            itemBuilder: (context, index) {
+                                              final data = PenyakitFormPage.dataPenyakit[index];
+                                              final isSelected = _selectedIndex == index;
+                                              final hindariBahan = data['hindariBahan'] as List<dynamic>;
 
-                                                return GestureDetector(
-                                                  onTap: () {
-                                                    setState(() {
-                                                      _selectedIndex = index;
-                                                    });
-                                                  },
-                                                  child: Container(
-                                                    padding:
-                                                        const EdgeInsets.symmetric(
-                                                          vertical: 12,
-                                                        ),
-                                                    decoration: BoxDecoration(
-                                                      color:
-                                                          isSelected
-                                                              ? const Color(
-                                                                0xFF225840,
-                                                              ).withOpacity(0.1)
-                                                              : null,
-                                                      border: Border(
-                                                        bottom: BorderSide(
-                                                          color:
-                                                              Colors.grey[300]!,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    child: Row(
-                                                      children: [
-                                                        Expanded(
-                                                          flex: 2,
-                                                          child: Text(
-                                                            data['nama'],
-                                                            textAlign:
-                                                                TextAlign
-                                                                    .center,
-                                                            style: TextStyle(
-                                                              fontSize: 10,
-                                                              fontWeight:
-                                                                  isSelected
-                                                                      ? FontWeight
-                                                                          .bold
-                                                                      : FontWeight
-                                                                          .normal,
-                                                            ),
-                                                          ),
-                                                        ),
-                                                        Expanded(
-                                                          flex: 3,
-                                                          child: Text(
-                                                            data['deskripsi'],
-                                                            textAlign:
-                                                                TextAlign
-                                                                    .center,
-                                                            maxLines: 2,
-                                                            overflow:
-                                                                TextOverflow
-                                                                    .ellipsis,
-                                                            style: TextStyle(
-                                                              fontSize: 10,
-                                                              fontWeight:
-                                                                  isSelected
-                                                                      ? FontWeight
-                                                                          .bold
-                                                                      : FontWeight
-                                                                          .normal,
-                                                            ),
-                                                          ),
-                                                        ),
-                                                        Expanded(
-                                                          flex: 2,
-                                                          child: Text(
-                                                            (data['hindariBahan']
-                                                                    as List)
-                                                                .join(', '),
-                                                            textAlign:
-                                                                TextAlign
-                                                                    .center,
-                                                            style: TextStyle(
-                                                              fontSize: 10,
-                                                              fontWeight:
-                                                                  isSelected
-                                                                      ? FontWeight
-                                                                          .bold
-                                                                      : FontWeight
-                                                                          .normal,
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ],
+                                              return GestureDetector(
+                                                onTap: () {
+                                                  setState(() {
+                                                    _selectedIndex = index;
+                                                  });
+                                                },
+                                                child: Container(
+                                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                                  decoration: BoxDecoration(
+                                                    color: isSelected
+                                                        ? const Color(0xFF225840).withOpacity(0.1)
+                                                        : null,
+                                                    border: Border(
+                                                      bottom: BorderSide(color: Colors.grey[300]!),
                                                     ),
                                                   ),
-                                                );
-                                              },
-                                            ),
+                                                  child: Row(
+                                                    children: [
+                                                      Expanded(
+                                                        flex: 2,
+                                                        child: Text(
+                                                          data['nama'],
+                                                          textAlign: TextAlign.center,
+                                                          style: TextStyle(
+                                                            fontSize: 10,
+                                                            fontWeight: isSelected
+                                                                ? FontWeight.bold
+                                                                : FontWeight.normal,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      Expanded(
+                                                        flex: 2,
+                                                        child: Text(
+                                                          data['deskripsi'],
+                                                          textAlign: TextAlign.center,
+                                                          maxLines: 2,
+                                                          overflow: TextOverflow.ellipsis,
+                                                          style: TextStyle(
+                                                            fontSize: 9,
+                                                            fontWeight: isSelected
+                                                                ? FontWeight.bold
+                                                                : FontWeight.normal,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      Expanded(
+                                                        flex: 3,
+                                                        child: Column(
+                                                          children: hindariBahan.map<Widget>((bahan) {
+                                                            return Text(
+                                                              '${bahan['nama']}: ${bahan['batas_maksimal']}${bahan['unit']}',
+                                                              textAlign: TextAlign.center,
+                                                              style: TextStyle(
+                                                                fontSize: 8,
+                                                                fontWeight: isSelected
+                                                                    ? FontWeight.bold
+                                                                    : FontWeight.normal,
+                                                              ),
+                                                            );
+                                                          }).toList(),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              );
+                                            },
+                                          ),
                                   ),
                                 ],
                               ),
@@ -658,7 +704,9 @@ class _PenyakitFormPageState extends State<PenyakitFormPage> {
   void dispose() {
     _namaController.dispose();
     _deskripsiController.dispose();
+    _keteranganController.dispose();
     _bahanController.dispose();
+    _batasController.dispose();
     super.dispose();
   }
 }
@@ -667,12 +715,14 @@ class FormFieldWithLabel extends StatelessWidget {
   final String label;
   final TextEditingController controller;
   final int maxLines;
+  final String? hint;
 
   const FormFieldWithLabel({
     super.key,
     required this.label,
     required this.controller,
     this.maxLines = 1,
+    this.hint,
   });
 
   @override
@@ -686,7 +736,10 @@ class FormFieldWithLabel extends StatelessWidget {
             width: 120,
             child: Padding(
               padding: const EdgeInsets.only(top: 12),
-              child: Text(label),
+              child: Text(
+                label,
+                style: const TextStyle(fontWeight: FontWeight.w500),
+              ),
             ),
           ),
           Expanded(
@@ -694,7 +747,7 @@ class FormFieldWithLabel extends StatelessWidget {
               controller: controller,
               maxLines: maxLines,
               decoration: InputDecoration(
-                hintText: label,
+                hintText: hint ?? label,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(15),
                 ),

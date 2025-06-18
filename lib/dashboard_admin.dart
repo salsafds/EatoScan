@@ -27,7 +27,7 @@ class DashboardAdmin extends StatelessWidget {
                   children: [
                     Text(
                       "EatoScan",
-                      style: GoogleFonts.poppins(
+                      style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
@@ -37,14 +37,14 @@ class DashboardAdmin extends StatelessWidget {
                     RichText(
                       text: TextSpan(
                         text: 'Selamat Datang, ',
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(
                           fontSize: 16,
                           color: Colors.white,
                         ),
                         children: [
                           TextSpan(
                             text: 'Admin!',
-                            style: GoogleFonts.poppins(
+                            style: TextStyle(
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
                             ),
@@ -114,7 +114,7 @@ class DashboardAdmin extends StatelessWidget {
 
           child: Text(
             'Keluar',
-            style: GoogleFonts.poppins(
+            style: TextStyle(
               color: const Color(0xFFE85D04),
               fontWeight: FontWeight.bold,
               fontSize: 16,
@@ -153,7 +153,7 @@ class DashboardAdmin extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               label,
-              style: GoogleFonts.poppins(
+              style: TextStyle(
                 fontSize: 12,
                 color: Colors.white,
                 fontWeight: FontWeight.w600,
@@ -181,7 +181,7 @@ class DashboardAdmin extends StatelessWidget {
                 Text(
                   'Apakah Anda yakin ingin\nkeluar dari akun ini?',
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.poppins(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
@@ -210,7 +210,7 @@ class DashboardAdmin extends StatelessWidget {
                       ),
                       child: Text(
                         'Ya',
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                         ),
@@ -232,7 +232,7 @@ class DashboardAdmin extends StatelessWidget {
                       ),
                       child: Text(
                         'Tidak',
-                        style: GoogleFonts.poppins(
+                        style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                         ),
