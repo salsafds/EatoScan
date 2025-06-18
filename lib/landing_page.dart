@@ -255,6 +255,7 @@ class _LandingPageState extends State<LandingPage> {
                       (context) => ProductDetailScreen(
                         product: matchedProduct,
                         imagePath: imagePath,
+
                       ),
                 ),
               ).then((_) {

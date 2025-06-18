@@ -12,7 +12,7 @@ class EditRiwayatKesehatanPage extends StatefulWidget {
 
 class _EditRiwayatKesehatanPageState extends State<EditRiwayatKesehatanPage> {
   String? _gender;
-  Map<String, bool> _penyakitStatus = {};
+  final Map<String, bool> _penyakitStatus = {};
   String? _savedGender;
   Map<String, bool> _savedPenyakitStatus = {};
   bool _hasChanges = false;
@@ -247,7 +247,7 @@ class _EditRiwayatKesehatanPageState extends State<EditRiwayatKesehatanPage> {
                               });
                             },
                           );
-                        }).toList(),
+                        }),
                       const SizedBox(height: 8),
                       const Text(
                         "nb: tidak perlu memilih jika tidak memiliki riwayat penyakit tertentu",

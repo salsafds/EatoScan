@@ -1,51 +1,196 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 import 'produk_model.dart';
 
 class ProductDetailScreen extends StatelessWidget {
   final ProdukModel product;
   final String imagePath;
+  late final Box<ProdukModel> _produkBox;
 
-  const ProductDetailScreen({
+  ProductDetailScreen({
     super.key,
     required this.product,
     required this.imagePath,
-  });
+  }) {
+    _produkBox = Hive.box<ProdukModel>('produk');
+  }
 
+  // Fungsi parsing yang lebih robust dengan multiple fallback patterns
   Map<String, String> _parseNutrients(String nutrisiString) {
     final Map<String, String> nutrients = {};
-    if (nutrisiString.isNotEmpty) {
-      final parts = nutrisiString.split(', ');
-      for (var part in parts) {
-        final match = RegExp(r'(.+)\s$$(.+)\s?g$$').firstMatch(part);
-        if (match != null) {
-          nutrients[match.group(1)!] = match.group(2)!;
+    
+    // Log untuk debugging
+    print('=== PARSING NUTRIENTS ===');
+    print('Input: "$nutrisiString"');
+    print('Length: ${nutrisiString.length}');
+    print('Is empty: ${nutrisiString.isEmpty}');
+    
+    if (nutrisiString.isEmpty) {
+      print('String kosong, return empty map');
+      return nutrients;
+    }
+    
+    final parts = nutrisiString.split(', ');
+    print('Split parts: $parts');
+    print('Number of parts: ${parts.length}');
+    
+    for (int i = 0; i < parts.length; i++) {
+      final part = parts[i].trim();
+      print('Processing part $i: "$part"');
+      
+      if (part.isEmpty) {
+        print('Part kosong, skip');
+        continue;
+      }
+      
+      bool matched = false;
+      
+      // Pattern 1: "Nama (Berat g)"
+      RegExpMatch? match = RegExp(r'(.+)\s*$$(.+)\s*g$$').firstMatch(part);
+      if (match != null) {
+        final name = match.group(1)?.trim() ?? '';
+        final weight = match.group(2)?.trim() ?? '';
+        print('Pattern 1 matched: name="$name", weight="$weight"');
+        if (name.isNotEmpty && weight.isNotEmpty) {
+          nutrients[name] = weight;
+          matched = true;
         }
       }
+      
+      // Pattern 2: "Nama (Berat)" tanpa g
+      if (!matched) {
+        match = RegExp(r'(.+)\s*$$(.+)$$').firstMatch(part);
+        if (match != null) {
+          final name = match.group(1)?.trim() ?? '';
+          var weight = match.group(2)?.trim() ?? '';
+          weight = weight.replaceAll(RegExp(r'\s*(g|mg|kkal|kcal|ml|l)\s*$', caseSensitive: false), '');
+          print('Pattern 2 matched: name="$name", weight="$weight"');
+          if (name.isNotEmpty && weight.isNotEmpty) {
+            nutrients[name] = weight;
+            matched = true;
+          }
+        }
+      }
+      
+      // Pattern 3: "Nama: Berat g"
+      if (!matched) {
+        match = RegExp(r'(.+):\s*(.+)').firstMatch(part);
+        if (match != null) {
+          final name = match.group(1)?.trim() ?? '';
+          var weight = match.group(2)?.trim() ?? '';
+          weight = weight.replaceAll(RegExp(r'\s*(g|mg|kkal|kcal|ml|l)\s*$', caseSensitive: false), '');
+          print('Pattern 3 matched: name="$name", weight="$weight"');
+          if (name.isNotEmpty && weight.isNotEmpty) {
+            nutrients[name] = weight;
+            matched = true;
+          }
+        }
+      }
+      
+      // Pattern 4: "Nama Berat g" (space separated)
+      if (!matched) {
+        final spaceParts = part.split(' ');
+        if (spaceParts.length >= 2) {
+          // Cari angka dari belakang
+          for (int j = spaceParts.length - 1; j >= 1; j--) {
+            final potentialWeight = spaceParts[j].replaceAll(RegExp(r'[^\d.,]'), '');
+            if (potentialWeight.isNotEmpty && double.tryParse(potentialWeight.replaceAll(',', '.')) != null) {
+              final name = spaceParts.sublist(0, j).join(' ');
+              print('Pattern 4 matched: name="$name", weight="$potentialWeight"');
+              if (name.isNotEmpty) {
+                nutrients[name] = potentialWeight;
+                matched = true;
+                break;
+              }
+            }
+          }
+        }
+      }
+      
+      if (!matched) {
+        print('No pattern matched for: "$part"');
+      }
     }
+    
+    print('Final nutrients: $nutrients');
+    print('Nutrients count: ${nutrients.length}');
+    print('=== END PARSING ===');
+    
     return nutrients;
   }
 
-  // Fungsi untuk menentukan warna berdasarkan nilai nutrisi
+  // Fungsi untuk mendapatkan unit yang sesuai
+  String _getNutrientUnit(String nutrient) {
+    final lowerNutrient = nutrient.toLowerCase();
+    
+    if (lowerNutrient.contains('kalori') || lowerNutrient.contains('energi') || lowerNutrient.contains('energy')) {
+      return 'kkal';
+    } else if (lowerNutrient.contains('natrium') || lowerNutrient.contains('sodium') || lowerNutrient.contains('garam')) {
+      return 'mg';
+    } else if (lowerNutrient.contains('vitamin') || lowerNutrient.contains('mineral') || lowerNutrient.contains('kalsium')) {
+      return 'mg';
+    } else {
+      return 'g';
+    }
+  }
+
+  // Fungsi untuk mendapatkan rekomendasi produk
+  List<ProdukModel> _getRecommendedProducts() {
+    final currentRisks = product.risiko.split(', ').map((r) => r.trim().toLowerCase()).toSet();
+    return _produkBox.values.where((p) {
+      final otherRisks = p.risiko.split(', ').map((r) => r.trim().toLowerCase()).toSet();
+      return p.nama != product.nama && !currentRisks.any(otherRisks.contains);
+    }).toList().take(4).toList();
+  }
+
+  // Fungsi untuk menentukan warna
   Color _getNutrientColor(String nutrient, double value) {
-    switch (nutrient.toLowerCase()) {
-      case 'gula':
-        return value > 10 ? Colors.red : Colors.green;
-      case 'garam':
-        return value > 1 ? Colors.red : Colors.green;
-      case 'lemak':
-        return value > 5 ? Colors.red : Colors.green;
-      case 'kalori':
-        return value > 200 ? Colors.red : Colors.green;
-      default:
-        return Colors.green;
+    final lowerNutrient = nutrient.toLowerCase();
+    
+    if (lowerNutrient.contains('gula') || lowerNutrient.contains('sugar')) {
+      return value > 10 ? Colors.red : Colors.green;
+    } else if (lowerNutrient.contains('garam') || lowerNutrient.contains('sodium') || lowerNutrient.contains('natrium')) {
+      return value > 1000 ? Colors.red : Colors.green;
+    } else if (lowerNutrient.contains('lemak') || lowerNutrient.contains('fat')) {
+      return value > 5 ? Colors.red : Colors.green;
+    } else if (lowerNutrient.contains('kalori') || lowerNutrient.contains('energi')) {
+      return value > 200 ? Colors.red : Colors.green;
+    } else {
+      return Colors.green;
+    }
+  }
+
+  // Fungsi untuk menentukan status
+  String _getNutrientStatus(String nutrient, double value) {
+    final lowerNutrient = nutrient.toLowerCase();
+    
+    if (lowerNutrient.contains('gula') || lowerNutrient.contains('sugar')) {
+      return value > 10 ? 'Tinggi' : 'Rendah';
+    } else if (lowerNutrient.contains('garam') || lowerNutrient.contains('sodium') || lowerNutrient.contains('natrium')) {
+      return value > 1000 ? 'Tinggi' : 'Rendah';
+    } else if (lowerNutrient.contains('lemak') || lowerNutrient.contains('fat')) {
+      return value > 5 ? 'Tinggi' : 'Rendah';
+    } else if (lowerNutrient.contains('kalori') || lowerNutrient.contains('energi')) {
+      return value > 200 ? 'Tinggi' : 'Rendah';
+    } else {
+      return 'Normal';
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Parse nutrients di awal dan log hasilnya
     final nutrients = _parseNutrients(product.nutrisi);
+    final recommendedProducts = _getRecommendedProducts();
     final isAssetImage = imagePath.startsWith('assets/');
+    
+    // Log untuk memastikan data ada
+    // print('=== BUILD METHOD ===');
+    // print('Product nutrisi: "${product.nutrisi}"');
+    // print('Parsed nutrients count: ${nutrients.length}');
+    // print('Nutrients: $nutrients');
+    // print('=== END BUILD LOG ===');
 
     return Scaffold(
       backgroundColor: Colors.grey[100],
@@ -110,6 +255,37 @@ class ProductDetailScreen extends StatelessWidget {
                         ),
                       ),
                       
+                      // Status container - SELALU tampilkan untuk debugging
+                      // Container(
+                      //   margin: const EdgeInsets.all(16),
+                      //   padding: const EdgeInsets.all(8),
+                      //   decoration: BoxDecoration(
+                      //     color: nutrients.isNotEmpty ? Colors.green[50] : Colors.red[50],
+                      //     border: Border.all(
+                      //       color: nutrients.isNotEmpty ? Colors.green : Colors.red
+                      //     ),
+                      //     borderRadius: BorderRadius.circular(8),
+                      //   ),
+                      //   child: Column(
+                      //     crossAxisAlignment: CrossAxisAlignment.start,
+                      //     children: [
+                      //       Text(
+                      //         'Status Parsing: ${nutrients.isNotEmpty ? "SUCCESS ✓" : "FAILED ✗"}',
+                      //         style: TextStyle(
+                      //           fontWeight: FontWeight.bold,
+                      //           color: nutrients.isNotEmpty ? Colors.green[800] : Colors.red[800],
+                      //         ),
+                      //       ),
+                      //       Text('Raw Data: "${product.nutrisi}"'),
+                      //       Text('Parsed Count: ${nutrients.length}'),
+                      //       if (nutrients.isNotEmpty) ...[
+                      //         const Text('Sample Data:'),
+                      //         ...nutrients.entries.take(2).map((e) => Text('• ${e.key}: ${e.value}')),
+                      //       ],
+                      //     ],
+                      //   ),
+                      // ),
+                      
                       // Nutri-Score
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8),
@@ -144,7 +320,7 @@ class ProductDetailScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             Text(
-                              product.nama,
+                              product.nama.isNotEmpty ? product.nama : 'Produk Tidak Ditemukan',
                               style: const TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
@@ -152,7 +328,7 @@ class ProductDetailScreen extends StatelessWidget {
                               textAlign: TextAlign.center,
                             ),
                             Text(
-                              product.tambahan,
+                              product.tambahan.isNotEmpty ? product.tambahan : 'Kategori tidak tersedia',
                               style: TextStyle(
                                 fontSize: 16,
                                 color: Colors.grey[600],
@@ -203,23 +379,71 @@ class ProductDetailScreen extends StatelessWidget {
                           ),
                         ),
                       
-                      // Nutrient cards
+                      // Nutrient cards - SELALU tampilkan section ini
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: GridView.count(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          crossAxisCount: 3,
-                          crossAxisSpacing: 8,
-                          mainAxisSpacing: 8,
-                          childAspectRatio: 1.5,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _buildNutrientCard('Kalori', '150', 'Rendah'),
-                            _buildNutrientCard('Lemak', '5', 'Rendah'),
-                            _buildNutrientCard('Karbo', '25', 'Rendah'),
-                            _buildNutrientCard('Protein', '3', 'Rendah'),
-                            _buildNutrientCard('Gula', '20', 'Tinggi', isHigh: true),
-                            _buildNutrientCard('Garam', '0.5', 'Rendah'),
+                            const Text(
+                              'Ringkasan Nutrisi',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            
+                            // Tampilkan nutrient cards jika ada data
+                            if (nutrients.isNotEmpty) ...[
+                              GridView.count(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                crossAxisCount: 3,
+                                crossAxisSpacing: 8,
+                                mainAxisSpacing: 8,
+                                childAspectRatio: 1.5,
+                                children: nutrients.entries.take(6).map((entry) {
+                                  final value = double.tryParse(entry.value.replaceAll(',', '.')) ?? 0.0;
+                                  final status = _getNutrientStatus(entry.key, value);
+                                  final color = _getNutrientColor(entry.key, value);
+                                  return _buildNutrientCard(entry.key, entry.value, status, color: color);
+                                }).toList(),
+                              ),
+                            ] else ...[
+                              // Tampilkan pesan jika tidak ada data
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[100],
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: Colors.grey[300]!),
+                                ),
+                                child: Column(
+                                  children: [
+                                    Icon(Icons.info_outline, color: Colors.grey[600], size: 48),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'Data Nutrisi Tidak Tersedia',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.grey[700],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'Format data nutrisi tidak dapat diparsing',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey[600],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ],
                         ),
                       ),
@@ -241,16 +465,16 @@ class ProductDetailScreen extends StatelessWidget {
                         child: ListView(
                           scrollDirection: Axis.horizontal,
                           padding: const EdgeInsets.symmetric(horizontal: 16),
-                          children: [
-                            _buildRecommendationCard(
-                              'Tropicana Slim 7 Fruit Fiber Daily',
-                              'Sugar Free',
-                            ),
-                            _buildRecommendationCard(
-                              'Tropicana Slim Sugar Free California Orange',
-                              'Sugar Free',
-                            ),
-                          ],
+                          children: recommendedProducts.map((recommendedProduct) {
+                            return _buildRecommendationCard(
+                              recommendedProduct.nama,
+                              recommendedProduct.preferensiNutrisi['bebas_laktosa'] == true 
+                                ? 'Bebas Laktosa' 
+                                : recommendedProduct.preferensiNutrisi['bebas_gluten'] == true
+                                  ? 'Bebas Gluten'
+                                  : 'Sehat',
+                            );
+                          }).toList(),
                         ),
                       ),
                       
@@ -312,12 +536,104 @@ class ProductDetailScreen extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(height: 12),
-                              _buildNutritionRow('Takaran kemasan', '${product.takaranKemasan} gram'),
-                              _buildNutritionRow('Sajian per kemasan', '${product.sajianPerKemasan}'),
-                              const Divider(),
-                              ...nutrients.entries.map((entry) {
-                                return _buildNutritionRow(entry.key, '${entry.value} g');
-                              }).toList(),
+                              
+                              // Informasi Kemasan
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.7),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Informasi Kemasan',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.orange[700],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    _buildNutritionRow('Takaran kemasan', '${product.takaranKemasan.toInt()} gram'),
+                                    _buildNutritionRow('Sajian per kemasan', '${product.sajianPerKemasan.toInt()}'),
+                                  ],
+                                ),
+                              ),
+                              
+                              const SizedBox(height: 12),
+                              
+                              // Kandungan Nutrisi per Sajian
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.7),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Kandungan Nutrisi per Sajian',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.orange[700],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    
+                                    // SELALU tampilkan section ini
+                                    if (nutrients.isNotEmpty) ...[
+                                      ...nutrients.entries.map((entry) {
+                                        final value = double.tryParse(entry.value.replaceAll(',', '.')) ?? 0.0;
+                                        final color = _getNutrientColor(entry.key, value);
+                                        final unit = _getNutrientUnit(entry.key);
+                                        return Padding(
+                                          padding: const EdgeInsets.symmetric(vertical: 2),
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Expanded(
+                                                child: Text(
+                                                  entry.key,
+                                                  style: const TextStyle(fontSize: 12),
+                                                ),
+                                              ),
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                                decoration: BoxDecoration(
+                                                  color: color.withOpacity(0.2),
+                                                  borderRadius: BorderRadius.circular(4),
+                                                  border: Border.all(color: color, width: 0.5),
+                                                ),
+                                                child: Text(
+                                                  '${entry.value} $unit',
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: color,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      }).toList(),
+                                    ] else ...[
+                                      Text(
+                                        'Data nutrisi tidak dapat diparsing dari: "${product.nutrisi}"',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontStyle: FontStyle.italic,
+                                          color: Colors.orange[600],
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -355,10 +671,10 @@ class ProductDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildNutrientCard(String name, String value, String status, {bool isHigh = false}) {
+  Widget _buildNutrientCard(String name, String value, String status, {Color? color}) {
     return Container(
       decoration: BoxDecoration(
-        color: isHigh ? Colors.red : Colors.green,
+        color: color ?? Colors.green,
         borderRadius: BorderRadius.circular(8),
       ),
       padding: const EdgeInsets.all(8),
@@ -370,8 +686,11 @@ class ProductDetailScreen extends StatelessWidget {
             style: const TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.bold,
+              fontSize: 10,
             ),
             textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 4),
           Text(

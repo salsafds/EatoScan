@@ -363,7 +363,7 @@ class _PenyakitFormPageState extends State<PenyakitFormPage> {
                                             ],
                                           ),
                                         );
-                                      }).toList(),
+                                      }),
 
                                       // Add new ingredient
                                       Row(
