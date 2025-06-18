@@ -17,7 +17,7 @@ class ProductDetailScreen extends StatelessWidget {
     if (nutrisiString.isNotEmpty) {
       final parts = nutrisiString.split(', ');
       for (var part in parts) {
-        final match = RegExp(r'(.+)\s\((.+)\s?g\)').firstMatch(part);
+        final match = RegExp(r'(.+)\s$$(.+)\s?g$$').firstMatch(part);
         if (match != null) {
           nutrients[match.group(1)!] = match.group(2)!;
         }
@@ -26,169 +26,304 @@ class ProductDetailScreen extends StatelessWidget {
     return nutrients;
   }
 
+  // Fungsi untuk menentukan warna berdasarkan nilai nutrisi
+  Color _getNutrientColor(String nutrient, double value) {
+    switch (nutrient.toLowerCase()) {
+      case 'gula':
+        return value > 10 ? Colors.red : Colors.green;
+      case 'garam':
+        return value > 1 ? Colors.red : Colors.green;
+      case 'lemak':
+        return value > 5 ? Colors.red : Colors.green;
+      case 'kalori':
+        return value > 200 ? Colors.red : Colors.green;
+      default:
+        return Colors.green;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final nutrients = _parseNutrients(product.nutrisi);
     final isAssetImage = imagePath.startsWith('assets/');
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Eatoscan'),
-        backgroundColor: Colors.green,
-      ),
+      backgroundColor: Colors.grey[100],
       body: Stack(
         children: [
-          // Latar belakang foto yang di-capture
+          // Background image
           Container(
+            height: MediaQuery.of(context).size.height * 0.4,
             decoration: BoxDecoration(
               image: DecorationImage(
-                image:
-                    isAssetImage
-                        ? AssetImage(imagePath)
-                        : FileImage(File(imagePath)),
+                image: isAssetImage
+                    ? AssetImage(imagePath) as ImageProvider
+                    : FileImage(File(imagePath)),
                 fit: BoxFit.cover,
-                onError:
-                    (exception, stackTrace) =>
-                        const AssetImage('assets/images/eatoscan.png'),
+                colorFilter: ColorFilter.mode(
+                  Colors.black.withOpacity(0.3),
+                  BlendMode.darken,
+                ),
               ),
             ),
           ),
+          
+          // Back button
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
+          ),
+          
+          // Content
           DraggableScrollableSheet(
             initialChildSize: 0.6,
-            minChildSize: 0.2,
+            minChildSize: 0.6,
             maxChildSize: 0.9,
-            builder: (BuildContext context, ScrollController scrollController) {
+            builder: (context, scrollController) {
               return Container(
                 decoration: const BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
                 ),
-                child: ListView(
+                child: SingleChildScrollView(
                   controller: scrollController,
-                  padding: const EdgeInsets.all(16.0),
-                  children: [
-                    const Center(
-                      child: Icon(
-                        Icons.drag_handle,
-                        size: 30,
-                        color: Colors.grey,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      product.nama.isNotEmpty
-                          ? product.nama
-                          : 'Produk Tidak Ditemukan',
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      product.tambahan.isNotEmpty
-                          ? product.tambahan
-                          : 'Kategori tidak tersedia',
-                      style: const TextStyle(fontSize: 16, color: Colors.grey),
-                    ),
-                    const SizedBox(height: 10),
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      color: Colors.yellow[700],
-                      child: Text(
-                        product.risiko.isNotEmpty
-                            ? 'Peringatan\n${product.risiko}'
-                            : 'Tidak ada peringatan',
-                        style: const TextStyle(color: Colors.black),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children:
-                          nutrients.entries.map((entry) {
-                            final value = double.tryParse(entry.value) ?? 0.0;
-                            final isHigh = value > 10.0; // Contoh threshold
-                            return _NutrientCard(
-                              label: entry.key,
-                              value: isHigh ? 'Tinggi' : 'Rendah',
-                              isHigh: isHigh,
-                            );
-                          }).toList(),
-                    ),
-                    const SizedBox(height: 10),
-                    const Text(
-                      'Rekomendasi Produk Lain',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        _ProductCard(
-                          name: 'Tropicana Slim 7 Fruit Fiber Daily',
-                          isSugarFree: true,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Drag handle
+                      Center(
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 12, bottom: 8),
+                          child: Container(
+                            width: 40,
+                            height: 5,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[300],
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
                         ),
-                        _ProductCard(
-                          name: 'Tropicana Slim Sugar Free California Orange',
-                          isSugarFree: true,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    const Text(
-                      'Preferensi Nutrisi',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
                       ),
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        _PreferenceCard(
-                          label: 'Bebas Laktosa',
-                          isChecked:
-                              product.preferensiNutrisi['bebas_laktosa'] ??
-                              false,
+                      
+                      // Nutri-Score
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Column(
+                          children: [
+                            const Text(
+                              'Nutri-Score',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                _buildScoreCircle('A', Colors.green),
+                                _buildScoreCircle('B', Colors.lightGreen),
+                                _buildScoreCircle('C', Colors.yellow, isSelected: true),
+                                _buildScoreCircle('D', Colors.orange),
+                                _buildScoreCircle('E', Colors.red),
+                              ],
+                            ),
+                          ],
                         ),
-                        _PreferenceCard(
-                          label: 'Bebas Gluten',
-                          isChecked:
-                              product.preferensiNutrisi['bebas_gluten'] ??
-                              false,
+                      ),
+                      
+                      // Product name and category
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Text(
+                              product.nama,
+                              style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            Text(
+                              product.tambahan,
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
                         ),
-                        _PreferenceCard(
-                          label: 'Vegetarian',
-                          isChecked:
+                      ),
+                      
+                      // Warning section
+                      if (product.risiko.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.orange[100],
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.orange),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(Icons.warning_amber_rounded, color: Colors.orange[800]),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Peringatan',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.orange[800],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  product.risiko,
+                                  style: TextStyle(
+                                    color: Colors.orange[800],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      
+                      // Nutrient cards
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: GridView.count(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          crossAxisCount: 3,
+                          crossAxisSpacing: 8,
+                          mainAxisSpacing: 8,
+                          childAspectRatio: 1.5,
+                          children: [
+                            _buildNutrientCard('Kalori', '150', 'Rendah'),
+                            _buildNutrientCard('Lemak', '5', 'Rendah'),
+                            _buildNutrientCard('Karbo', '25', 'Rendah'),
+                            _buildNutrientCard('Protein', '3', 'Rendah'),
+                            _buildNutrientCard('Gula', '20', 'Tinggi', isHigh: true),
+                            _buildNutrientCard('Garam', '0.5', 'Rendah'),
+                          ],
+                        ),
+                      ),
+                      
+                      // Recommendations
+                      const Padding(
+                        padding: EdgeInsets.fromLTRB(16, 24, 16, 8),
+                        child: Text(
+                          'Rekomendasi Produk Lain',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      
+                      SizedBox(
+                        height: 180,
+                        child: ListView(
+                          scrollDirection: Axis.horizontal,
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          children: [
+                            _buildRecommendationCard(
+                              'Tropicana Slim 7 Fruit Fiber Daily',
+                              'Sugar Free',
+                            ),
+                            _buildRecommendationCard(
+                              'Tropicana Slim Sugar Free California Orange',
+                              'Sugar Free',
+                            ),
+                          ],
+                        ),
+                      ),
+                      
+                      // Nutrition preferences
+                      const Padding(
+                        padding: EdgeInsets.fromLTRB(16, 24, 16, 8),
+                        child: Text(
+                          'Preferensi Nutrisi',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Column(
+                          children: [
+                            _buildPreferenceItem(
+                              'Bebas Laktosa',
+                              product.preferensiNutrisi['bebas_laktosa'] ?? false,
+                            ),
+                            _buildPreferenceItem(
+                              'Bebas Gluten',
+                              product.preferensiNutrisi['bebas_gluten'] ?? false,
+                            ),
+                            _buildPreferenceItem(
+                              'Vegetarian',
                               product.preferensiNutrisi['vegetarian'] ?? false,
-                        ),
-                        _PreferenceCard(
-                          label: 'Vegan',
-                          isChecked:
+                            ),
+                            _buildPreferenceItem(
+                              'Vegan',
                               product.preferensiNutrisi['vegan'] ?? false,
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      color: Colors.yellow[700],
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children:
-                            nutrients.entries.map((entry) {
-                              return _NutritionInfo(
-                                label: entry.key,
-                                value: '${entry.value} g',
-                              );
-                            }).toList(),
                       ),
-                    ),
-                  ],
+                      
+                      // Detailed nutrition info
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.orange[100],
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Informasi Gizi',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.orange[800],
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              _buildNutritionRow('Takaran kemasan', '${product.takaranKemasan} gram'),
+                              _buildNutritionRow('Sajian per kemasan', '${product.sajianPerKemasan}'),
+                              const Divider(),
+                              ...nutrients.entries.map((entry) {
+                                return _buildNutritionRow(entry.key, '${entry.value} g');
+                              }).toList(),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               );
             },
@@ -197,97 +332,171 @@ class ProductDetailScreen extends StatelessWidget {
       ),
     );
   }
-}
 
-class _NutrientCard extends StatelessWidget {
-  final String label;
-  final String value;
-  final bool isHigh;
-
-  const _NutrientCard({
-    required this.label,
-    required this.value,
-    this.isHigh = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      color: isHigh ? Colors.red : Colors.green,
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          children: [
-            Text(label, style: const TextStyle(color: Colors.white)),
-            Text(
-              value,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
+  Widget _buildScoreCircle(String letter, Color color, {bool isSelected = false}) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 4),
+      width: 30,
+      height: 30,
+      decoration: BoxDecoration(
+        color: color,
+        shape: BoxShape.circle,
+        border: isSelected ? Border.all(color: Colors.black, width: 2) : null,
+      ),
+      child: Center(
+        child: Text(
+          letter,
+          style: TextStyle(
+            color: color == Colors.yellow ? Colors.black : Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
     );
   }
-}
 
-class _ProductCard extends StatelessWidget {
-  final String name;
-  final bool isSugarFree;
-
-  const _ProductCard({required this.name, required this.isSugarFree});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
+  Widget _buildNutrientCard(String name, String value, String status, {bool isHigh = false}) {
+    return Container(
+      decoration: BoxDecoration(
+        color: isHigh ? Colors.red : Colors.green,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      padding: const EdgeInsets.all(8),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const SizedBox(height: 50, child: Placeholder()),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text(name, textAlign: TextAlign.center),
+          Text(
+            name,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
           ),
-          if (isSugarFree) const Icon(Icons.check_circle, color: Colors.green),
+          const SizedBox(height: 4),
+          Text(
+            status,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+            ),
+          ),
         ],
       ),
     );
   }
-}
 
-class _PreferenceCard extends StatelessWidget {
-  final String label;
-  final bool isChecked;
-
-  const _PreferenceCard({required this.label, required this.isChecked});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(
-          isChecked ? Icons.check_circle : Icons.circle,
-          color: isChecked ? Colors.green : Colors.grey,
-        ),
-        const SizedBox(width: 5),
-        Text(label),
-      ],
+  Widget _buildRecommendationCard(String name, String tag) {
+    return Container(
+      width: 150,
+      margin: const EdgeInsets.only(right: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.2),
+            spreadRadius: 1,
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            height: 100,
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+            ),
+            child: const Center(
+              child: Icon(Icons.image, size: 40, color: Colors.grey),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.green,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        tag,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ),
+                    const Icon(Icons.favorite_border, size: 16),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
-}
 
-class _NutritionInfo extends StatelessWidget {
-  final String label;
-  final String value;
+  Widget _buildPreferenceItem(String label, bool isChecked) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Icon(
+            isChecked ? Icons.check_circle : Icons.circle_outlined,
+            color: isChecked ? Colors.green : Colors.grey,
+            size: 20,
+          ),
+          const SizedBox(width: 12),
+          Text(
+            label,
+            style: const TextStyle(fontSize: 14),
+          ),
+        ],
+      ),
+    );
+  }
 
-  const _NutritionInfo({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [Text(label), Text(value)],
+  Widget _buildNutritionRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(fontSize: 12),
+          ),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
